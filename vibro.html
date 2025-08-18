@@ -1,0 +1,1748 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Vibro — Тишина и волны</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0b0f14">
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+    }
+  </script>
+  <style>
+    :root{--bg:#0b0f14;--card:#121821;--text:#e9f0f6;--muted:#a8b3c2;--accent:#77e0a0;--border:#1b2430;}
+    body.theme-light{--bg:#f6f7fb;--card:#ffffff;--text:#0b0f14;--muted:#566074;--accent:#2fb37c;--border:#dce2ea;}
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0;background:var(--bg);color:var(--text);
+      font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,
+           "Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Yu Gothic","Meiryo","Noto Sans JP",
+           sans-serif;
+    }
+    .wrap{width:100%;max-width:480px;margin:0 auto;padding:14px}
+    .block{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.14)}
+    h1{font-size:20px;margin:0 0 8px}
+    .muted{color:var(--muted);font-size:14px}
+    .center{text-align:center}
+
+    label{display:block;font-size:13px;margin:12px 0 6px;color:#c8d3de}
+    body.theme-light label{color:#3d495c}
+    select{width:100%;padding:10px 12px;border-radius:12px;border:1px solid #2a3442;background:#0e141b;color:#e9f0f6;outline:none}
+    body.theme-light select{background:#f3f6fb;color:#0b0f14;border-color:#cfd8e6}
+    button{width:100%;padding:12px 14px;border:0;border-radius:12px;color:#061015;background:var(--accent);font-weight:700;cursor:pointer;margin-top:12px}
+    button:disabled{opacity:.5;cursor:not-allowed}
+
+    .metaphor{background:#0e141b;border:1px dashed #2a3442;padding:12px;border-radius:12px;color:#cfe6d8;font-size:14px}
+    body.theme-light .metaphor{background:#f3f6fb;border-color:#cfd8e6;color:#2b3546}
+
+    .callout{margin-top:10px;border:1px solid rgba(119,224,160,.4);background:rgba(119,224,160,.09);color:#bde7c7;border-radius:12px;padding:10px 12px;font-weight:600}
+    body.theme-light .callout{border-color:#cfead9;background:#eefaf3;color:#135f3f}
+
+    .chakra-preview{margin-top:8px;font-weight:700;display:flex;align-items:center;gap:8px}
+    .chakra-dot{width:12px;height:12px;border-radius:50%}
+
+    .timerBox{margin-top:12px;background:#0e141b;border:1px solid #2a3442;border-radius:16px;
+      padding:18px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:120px;transition:.2s}
+    body.theme-light .timerBox{background:#f3f6fb;border-color:#cfd8e6}
+    .timerBox.hidden{display:none}
+    .timerLabel{font-size:12px;color:#9fb0bf;margin-bottom:6px}
+    .timerClock{font-variant-numeric:tabular-nums;font-size:56px;font-weight:900;letter-spacing:1px;line-height:1}
+    .timerTarget{margin-top:6px;font-size:12px;color:#9fb0bf}
+    .overtime .timerClock{color:#f6c25a}
+
+    /* ====== MAP SECTION ====== */
+    details.map{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--card);box-shadow:0 8px 24px rgba(0,0,0,.14)}
+    details.map > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)}
+    details.map > summary::-webkit-details-marker{display:none}
+
+    /* бренд-капля — кнопка «О проекте» */
+    .tapIcon{width:28px;height:28px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(180deg,#182230,#0f1621);border:1px solid var(--border);flex:0 0 28px}
+    .tapIcon.brand{background:#1b1f2a url('icon-192.png') center/85% no-repeat;border:1px solid #2a3442;box-shadow:0 0 0 1px rgba(124,82,255,.25) inset}
+    body.theme-light .tapIcon.brand{background:#ffffff url('icon-192.png') center/85% no-repeat;border-color:#cfd8e6}
+
+    /* медаль подписчика */
+    .brandWrap{position:relative; width:28px; height:28px; flex:0 0 28px; display:grid; place-items:center}
+
+    .subBadge{
+      position:absolute; left:50%; top:0; transform:translate(-50%,-70%);
+      width:24px; height:24px; border-radius:50%;
+      display:none; place-items:center; pointer-events:none; z-index:2;
+      filter:drop-shadow(0 2px 8px rgba(0,0,0,.35));
+    }
+    .subBadge::before{content:""; position:absolute; inset:-2px; border-radius:50%;
+      background:conic-gradient(#fff5b8,#ffd45a,#caa20a,#ffd45a,#fff5b8); animation:spin 6s linear infinite;}
+    .subBadge::after{content:""; position:absolute; inset:1px; border-radius:50%;
+      background:radial-gradient(circle at 30% 30%,#fff7cc 0 32%,#ffd15a 52%,#caa20a 86%);
+      box-shadow:inset 0 1px 2px rgba(255,255,255,.6), inset 0 -2px 4px rgba(0,0,0,.25);}
+    .subBadge svg{position:relative;width:14px;height:14px;stroke:#5a3d00;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    body.is-subscriber .subBadge{display:grid}
+    @keyframes spin{to{transform:translate(-50%,-70%) rotate(360deg)}}
+
+    .mapHead{flex:1;min-width:0}
+    .mapTitle{font-weight:800;font-size:18px;color:#aeddff;text-align:center}
+    body.theme-light .mapTitle{color:#0a539c}
+    .mapSubtitle{font-size:12px;color:#cdd8e6;text-align:center;max-width:520px;margin:4px auto 0}
+    body.theme-light .mapSubtitle{color:#5d6a7a}
+
+    .chev{margin-left:6px;width:22px;height:22px;border-radius:6px;border:1px solid var(--border);display:grid;place-items:center}
+    .chev:after{content:"";width:8px;height:8px;border-right:2px solid #aeddff;border-bottom:2px solid #aeddff;transform:rotate(45deg)}
+    body.theme-light .chev:after{border-color:#0a539c}
+    details[open] .chev{transform:rotate(180deg)}
+    .hamb{margin-left:6px;width:38px;height:30px;border:1px solid var(--border);border-radius:10px;background:transparent;display:flex;flex-direction:column;justify-content:center;gap:6px;padding:0 9px}
+    .hamb span{display:block;height:2px;background:#aeddff;border-radius:2px}
+    body.theme-light .hamb span{background:#0a539c}
+
+
+
+    #mapWrap{position:relative}
+    #vmap{display:block;width:100%;aspect-ratio:2/1;height:auto;background:transparent;cursor:grab;touch-action:none}
+    #vmap.dragging{cursor:grabbing}
+
+    /* ——— тонкий ползунок зума ——— */
+    .zoomWrap{--t:0; position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;background:rgba(14,20,27,.40); border:1px solid rgba(42,52,66,.45); border-radius:10px;padding:6px;z-index:5;backdrop-filter:blur(6px) saturate(120%);}
+    body.theme-light .zoomWrap{background:rgba(255,255,255,.55);border-color:#cfd8e6}
+    .zoomBar{position:relative;height:190px;width:8px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border-radius:999px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+    .zoomFill{position:absolute;left:50%;transform:translateX(-50%);bottom:8px;top:calc((1 - var(--t))*100% + 8px);width:calc(4px + 6px*var(--t));background:linear-gradient(#7ec6ff,#0a84ff);border-radius:999px; box-shadow:0 0 8px rgba(10,132,255,.28), 0 0 1px rgba(255,255,255,.35) inset; pointer-events:none}
+    .zoomKnob{position:absolute;left:50%;transform:translate(-50%,-50%);width:calc(12px + 4px*var(--t));height:calc(12px + 4px*var(--t));border-radius:50%;background:#e9f0f6;border:2px solid #0a84ff;box-shadow:0 2px 8px rgba(0,0,0,.35);touch-action:none}
+
+    .mapHint{margin:12px 14px;background:#0e141b;border:1px solid #2a3442;border-radius:12px;padding:10px 12px;color:#cfe6d8;font-size:14px}
+    body.theme-light .mapHint{background:#f3f6fb;border-color:#cfd8e6;color:#2b3546}
+
+    /* ===== Переключатели у карты ===== */
+    .mapControls{position:absolute;left:10px;bottom:10px;display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;z-index:6}
+    .mapThumbs{display:flex;gap:8px}
+    .mapBtn{width:36px;height:24px;border-radius:6px;border:2px solid #2a3442;background-position:center;background-size:cover;background-repeat:no-repeat;box-shadow:0 2px 6px rgba(0,0,0,.25);opacity:.95;cursor:pointer}
+    .mapBtn:focus-visible{outline:2px solid #7c52ff;outline-offset:2px}
+    .mapBtn.active{box-shadow:0 0 0 2px #7c52ff inset, 0 2px 6px rgba(0,0,0,.35)}
+    body.theme-light .mapBtn{border-color:#cfd8e6}
+    .mapBtn.mask-light{box-shadow:inset 0 0 0 100vmax rgba(255,255,255,.12)}
+    .mapBtn.mask-dark{box-shadow:inset 0 0 0 100vmax rgba(0,0,0,.18)}
+
+    .chips{display:flex;gap:6px;align-items:flex-end}
+    .chip{height:24px;padding:0 8px;border-radius:8px;font-weight:800;font-size:12px;line-height:24px;cursor:pointer;border:1px solid #2a3442;background:rgba(14,20,27,.75);color:#aeddff;backdrop-filter:blur(3px)}
+    .chip.active{background:#0a84ff1a;border-color:#0a84ff;color:#e9f0f6;box-shadow:0 0 0 2px rgba(10,132,255,.25) inset}
+    body.theme-light .chip{border-color:#cfd8e6;background:rgba(255,255,255,.7);color:#0a539c}
+    body.theme-light .chip.active{border-color:#0a84ff;color:#0a84ff}
+
+    /* маленькие красные счётчики над чипсами */
+    .chipWrap{position:relative;display:flex;flex-direction:column;align-items:center}
+    .chipCount{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;color:#ff6b6b;text-shadow:0 1px 2px rgba(0,0,0,.65);pointer-events:none}
+    body.theme-light .chipCount{color:#c73b3b;text-shadow:0 1px 1px rgba(255,255,255,.6), 0 1px 2px rgba(0,0,0,.2)}
+
+    .formLabel{margin-top:14px;margin-bottom:10px;font-size:15px;color:var(--text)}
+    .timeRow{display:flex;gap:10px;align-items:center;justify-content:flex-start;margin-top:6px}
+    .timeInput{flex:0 0 110px;width:110px;padding:10px 12px;border-radius:12px;border:1px solid #2a3442;background:#0e141b;color:#e9f0f6;font-size:26px;font-weight:800;letter-spacing:.5px;text-align:center;font-variant-numeric:tabular-nums}
+    .timeInput::placeholder{color:#7b8799;font-size:18px;font-weight:700;letter-spacing:1px;opacity:.9;}
+    .timeRow button{width:auto;margin-top:0;padding:11px 16px}
+    body.theme-light .timeInput{background:#f3f6fb;color:#0b0f14;border-color:#cfd8e6}
+
+    .drawer{position:fixed;inset:0;z-index:9998;display:none}
+    .drawer.show{display:block}
+    .drawer .scrim{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+    .drawer .panel{position:absolute;top:0;right:0;width:360px;max-width:92vw;height:100%;background:var(--card);border-left:1px solid var(--border);padding:16px;overflow:auto}
+    .panel h3{margin:14px 0 10px}
+    .row{display:flex;align-items:center;justify-content:space-between;margin:10px 0;gap:10px}
+    .btn{padding:10px 12px;border-radius:10px;border:1px solid #2a3442;background:#121b25;color:#e9f0f6;cursor:pointer}
+    .btn.primary{background:#7c52ff;color:#0b0f14;border-color:#6c44ec}
+    .btn.green{background:#77e0a0;color:#061015;border-color:#65c48a}
+    .btn.active{box-shadow:0 0 0 2px #7c52ff inset}
+    body.theme-light .btn{background:#f3f6fb;color:#0b0f14;border-color:#cfd8e6}
+
+    .statCard{margin-top:12px;background:#0e141b;border:1px solid #2a3442;border-radius:12px;padding:12px}
+    body.theme-light .statCard{background:#f3f6fb;border-color:#cfd8e6}
+    .statsRow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .statItem .label{font-size:12px;color:#9fb0bf}
+    .statItem .bigNum{font-weight:900;font-size:22px;margin-top:2px}
+
+    .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#0e141b;color:#e9f0f6;border:1px solid #2a3442;border-radius:12px;padding:10px 12px;box-shadow:0 10px 24px rgba(0,0,0,.35);z-index:9999;display:none}
+    body.theme-light .toast{background:#ffffff;color:#0b0f14;border-color:#dce2ea}
+    .toast.show{display:block;animation:fadein .2s ease-out}
+    .toast .x{margin-left:10px;border:0;background:transparent;color:inherit;cursor:pointer;font-weight:700}
+    @keyframes fadein{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+
+    /* ====== ABOUT MODAL ====== */
+    .modal{position:fixed;inset:0;display:none;z-index:10000}
+    .modal.show{display:block}
+    .modal .scrim{position:absolute;inset:0;background:rgba(0,0,0,.5)}
+    .modal .box{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(720px,94vw);max-height:86vh;overflow:auto;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px 18px 22px;box-shadow:0 20px 40px rgba(0,0,0,.45)}
+    .modal .xBtn{position:absolute;right:12px;top:12px;width:32px;height:32px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text);font-weight:700;display:grid;place-items:center;cursor:pointer}
+    .modal h2{margin:8px 0 6px}
+    .modal h3{margin:14px 0 8px}
+    .modal p{margin:8px 0}
+
+    /* === iOS/Samsung-style switch === */
+    .switch{position:relative;display:inline-block;width:48px;height:28px;vertical-align:middle}
+    .switch input{opacity:0;width:0;height:0}
+    .switch .slider{position:absolute;inset:0;border-radius:999px;background:#253244;border:1px solid #2a3442;box-shadow:inset 0 -2px 3px rgba(0,0,0,.25);transition:background .2s,border-color .2s}
+    .switch .slider::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);transition:transform .2s}
+    .switch input:checked + .slider{background:#7c52ff;border-color:#6c44ec;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
+    .switch input:checked + .slider::after{transform:translateX(20px)}
+    .switch input:focus-visible + .slider{outline:2px solid rgba(124,82,255,.6);outline-offset:2px}
+    body.theme-light .switch .slider{background:#e9eef7;border-color:#cfd8e6}
+    body.theme-light .switch input:checked + .slider{background:#7c52ff;border-color:#6c44ec}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- КАРТА -->
+    <details id="mapSection" class="map" open>
+      <summary role="button" aria-controls="vmap" aria-expanded="true">
+        <div class="brandWrap">
+          <button id="brandBtn" class="tapIcon brand" type="button" title="" data-i18n-title="about_btn"></button>
+          <span id="subBadge" class="subBadge" title="" data-i18n-title="sub_active" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="7" r="2.4"></circle>
+              <path d="M8.2 12.8c1.4-1.1 3-1.3 3.8-1.3s2.4.2 3.8 1.3" />
+              <path d="M6.2 17.8l3.6-2.6M17.8 17.8l-3.6-2.6" />
+              <path d="M5 20h14" />
+            </svg>
+          </span>
+        </div>
+        <div class="mapHead">
+          <div class="mapTitle" data-i18n="map_title">Карта медитаций за 24 часа</div>
+          <div class="mapSubtitle" id="mapSubtitle"></div>
+        </div>
+        <button id="openMenu" class="hamb" type="button" aria-label="Menu"><span></span><span></span><span></span></button>
+        <div class="chev" aria-hidden="true"></div>
+      </summary>
+
+      <div id="mapWrap">
+        <canvas id="vmap"></canvas>
+
+        <!-- Переключатели карт + окно времени -->
+        <div class="mapControls" aria-label="Настройки карты">
+          <div class="mapThumbs">
+            <button id="mapLight" class="mapBtn mask-light" type="button" title="" data-i18n-title="map_light" style="background-image:url('world_light.jpg')"></button>
+            <button id="mapDark" class="mapBtn mask-dark" type="button" title="" data-i18n-title="map_dark" style="background-image:url('world_dark.jpg')"></button>
+          </div>
+          <div class="chips" role="group" aria-label="Окно времени">
+            <div class="chipWrap">
+              <span class="chipCount" data-ms="3600000">0</span>
+              <button class="chip" data-ms="3600000" title="" data-i18n-title="win_1h">1H</button>
+            </div>
+            <div class="chipWrap">
+              <span class="chipCount" data-ms="21600000">0</span>
+              <button class="chip" data-ms="21600000" title="" data-i18n-title="win_6h">6H</button>
+            </div>
+            <div class="chipWrap">
+              <span class="chipCount" data-ms="43200000">0</span>
+              <button class="chip" data-ms="43200000" title="" data-i18n-title="win_12h">12H</button>
+            </div>
+            <div class="chipWrap">
+              <span class="chipCount" data-ms="86400000">0</span>
+              <button class="chip" data-ms="86400000" title="" data-i18n-title="win_24h">24H</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="zoomWrap" id="zoomWrap">
+          <div class="zoomBar" id="zoomBar">
+            <div class="zoomFill" id="zoomFill"></div>
+            <div class="zoomKnob" id="zoomKnob"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="mapHint" class="mapHint" style="display:none"></div>
+    </details>
+
+    <!-- ОСНОВНОЙ БЛОК -->
+    <div class="block" style="margin-top:12px">
+      <h1 class="center" data-i18n="hero_title">Vibro — пространство внутренней тишины</h1>
+      <div class="muted center" data-i18n="hero_sub1">Минимально. Без слов. Ты — в тишине.</div>
+      <div class="muted center" data-i18n="hero_sub2" style="margin-top:4px">Медитация — это тренировка внутреннего безмолвия.</div>
+
+      <div class="callout" id="recNote" data-i18n="reco">Рекомендация: начни с 10 минут. Не спеши, увеличивай мягко по ощущению.</div>
+
+      <label style="margin-top:12px" data-i18n="select_label">Выберите по желанию длительность вашей медитации</label>
+      <select id="duration">
+        <option value="300"   id="opt300">5 минут</option>
+        <option value="600"   id="opt600" selected>10 минут (рекомендуем начать)</option>
+        <option value="900"   id="opt900">15 минут</option>
+        <option value="1200"  id="opt1200">20 минут</option>
+        <option value="1500"  id="opt1500">25 минут</option>
+        <option value="1800"  id="opt1800">30 минут</option>
+        <option value="3600"  id="opt3600">60 минут</option>
+      </select>
+
+      <div id="chakraPreview" class="chakra-preview">
+        <span id="chakraDot" class="chakra-dot"></span>
+        <span id="chakraText">—</span>
+      </div>
+
+      <div id="metaphor" class="metaphor" style="margin-top:12px"></div>
+
+      <button id="start" data-i18n="start">Начать медитацию</button>
+      <button id="stop" disabled data-i18n="stop">Завершить медитацию</button>
+
+      <div id="timerBox" class="timerBox">
+        <div class="timerLabel" id="timerLabel" data-i18n="timer_label">Таймер медитации</div>
+        <div class="timerClock" id="timerClock" aria-live="polite">00:00</div>
+        <div class="timerTarget" id="timerTarget">/ 10:00 цель</div>
+      </div>
+
+      <div id="post" style="display:none;margin-top:12px">
+        <div class="metaphor" id="advice" style="background:#7fe39a20;border-color:#7fe39a40;color:#bde7c7;margin-bottom:10px">…</div>
+        <div class="formLabel" id="enterSilenceLbl">—</div>
+        <div class="timeRow">
+          <input id="silenceInput" class="timeInput" type="text" inputmode="numeric" maxlength="5" placeholder="00:00" />
+          <button id="saveScore" title="Save">Save</button>
+        </div>
+        <div class="muted" id="silenceHint" style="margin-top:8px;font-size:12px"></div>
+      </div>
+
+      <div class="statCard">
+        <div class="statsRow">
+          <div class="statItem">
+            <div class="label" id="lblToday">Сегодня тишины</div>
+            <div id="todaySilence" class="bigNum">0 сек</div>
+          </div>
+          <div class="statItem">
+            <div class="label" id="lblWeek">На этой неделе</div>
+            <div id="weekSilence" class="bigNum">0 сек</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="muted" id="freeNote" style="margin-top:12px">Vibro бесплатен. Подписки и донат — см. в меню (иконка справа в шапке карты).</div>
+    </div>
+  </div>
+
+  <!-- Меню -->
+  <div id="drawer" class="drawer" aria-hidden="true">
+    <div class="scrim" id="closeMenu"></div>
+    <div class="panel">
+      <h3 data-i18n="settings">Настройки</h3>
+
+      <div class="row">
+        <div data-i18n="dark_theme">Тёмная тема</div>
+        <label class="switch">
+          <input type="checkbox" id="themeToggle" aria-label="Тёмная тема">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="row">
+        <div data-i18n="sound">Звук сигналов</div>
+        <label class="switch">
+          <input type="checkbox" id="soundToggle" aria-label="Звук сигналов">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="row">
+        <div data-i18n="language">Язык</div>
+        <div>
+          <button class="btn" id="langRu" aria-label="Русский">🇷🇺 RU</button>
+          <button class="btn" id="langEn" aria-label="English">🇬🇧 EN</button>
+          <button class="btn" id="langEs" aria-label="Español">🇪🇸 ES</button>
+          <button class="btn" id="langPt" aria-label="Português">🇧🇷 PT</button>
+          <button class="btn" id="langFr" aria-label="Français">🇫🇷 FR</button>
+          <button class="btn" id="langDe" aria-label="Deutsch">🇩🇪 DE</button>
+          <button class="btn" id="langZh" aria-label="中文">🇨🇳 ZH</button>
+          <button class="btn" id="langAr" aria-label="العربية">🇸🇦 AR</button>
+          <button class="btn" id="langJa" aria-label="日本語">🇯🇵 JA</button>
+        </div>
+      </div>
+
+      <h3><span data-i18n="support">Поддержать</span> <span class="muted" style="font-weight:400">(<span data-i18n="opt_in">по вашему желанию</span>)</span></h3>
+      <p class="muted" style="margin-top:-6px;margin-bottom:6px;font-size:12px" data-i18n="shine_note">
+        Ваша точка будет мерцать немножко ярче остальных.
+      </p>
+
+      <div class="row" id="subStatusRow" style="display:none">
+        <div class="muted" data-i18n="sub_active">Подписка активна</div>
+        <button class="btn" id="unsubscribeBtn" data-i18n="unsubscribe">Отменить</button>
+      </div>
+
+      <div class="row"><button class="btn primary" id="subMonth" data-i18n="sub_month">Подписка — $3.33 / мес</button></div>
+      <div class="row"><button class="btn primary" id="subYear" data-i18n="sub_year">Подписка — $33.33 / год</button></div>
+      <div class="row"><button class="btn green" id="donateOnce" data-i18n="donate_once">Донат (любая сумма)</button></div>
+
+      <h3 data-i18n="about">О проекте</h3>
+      <p id="about_p1"></p>
+      <p id="about_p2"></p>
+      <p id="about_p3"></p>
+      <p id="about_p4"></p>
+      <h3 data-i18n="what_medit">Что такое медитация?</h3>
+      <p id="about_p5"></p>
+      <p id="about_p6"></p>
+      <p id="about_p7"></p>
+      <p id="about_p8"></p>
+    </div>
+  </div>
+
+  <!-- О ПРОЕКТЕ — модал -->
+  <div id="about" class="modal" aria-hidden="true">
+    <div class="scrim"></div>
+    <div class="box" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+      <button class="xBtn" id="aboutClose" aria-label="Закрыть">✕</button>
+      <h2 id="aboutTitle" data-i18n="about_modal_title">Vibro — о проекте</h2>
+      <p id="modal_p1"></p>
+      <p id="modal_p2"></p>
+      <p id="modal_p3"></p>
+      <p id="modal_p4"></p>
+
+      <h3 data-i18n="what_medit">Что такое медитация?</h3>
+      <p id="modal_p5"></p>
+      <p id="modal_p6"></p>
+      <p id="modal_p7"></p>
+      <p id="modal_p8"></p>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <span id="toastText"></span>
+    <button class="x" id="toastClose" aria-label="Закрыть">×</button>
+  </div>
+
+  <script>
+  const $ = id => document.getElementById(id);
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+
+  /* ===== i18n ===== */
+  const I18N = {
+    en: {
+      map_title: "Meditation map for 24 hours",
+      map_sub_html: "You can mark yourself <b>only after meditation</b> — the dot is visible for 24 hours.<br>The map shows we are together.",
+      map_hint_html: "<b style='color:#7fe39a'>Now you can mark yourself on the map:</b> press & hold ~0.5s at the spot.",
+      about_btn: "About",
+      sub_active: "Subscription active",
+      map_light: "Light map",
+      map_dark: "Dark map",
+      win_1h: "Last hour",
+      win_6h: "Last 6 hours",
+      win_12h: "Last 12 hours",
+      win_24h: "Last 24 hours",
+
+      hero_title: "Vibro — space of inner silence",
+      hero_sub1: "Minimal. Wordless. You are in silence.",
+      hero_sub2: "Meditation is training of inner quiet.",
+      reco: "Recommendation: start with 10 minutes. Don't rush; increase gently as it feels right.",
+      select_label: "Pick your meditation duration (if you wish)",
+
+      start: "Start meditation",
+      stop: "Finish meditation",
+      timer_label: "Meditation timer",
+      goal: "goal",
+
+      enter_silence: "Enter your silence time in <b>MM:SS</b>.",
+      save: "Save",
+      maximum: "Maximum:",
+      by_timer: "(by timer)",
+
+      tip_prefix: "Tip:",
+      toast_after: "Now you can mark yourself on the map — press & hold 0.5s at the spot.",
+      toast_blocked: "You can mark yourself only after finishing the meditation 🙏",
+
+      today: "Silence today",
+      week: "This week",
+      free_note: "Vibro is free. Subscriptions & donations — see the menu (icon on the right in the map header).",
+
+      settings: "Settings",
+      dark_theme: "Dark theme",
+      sound: "Chime sound",
+      language: "Language",
+      support: "Support",
+      opt_in: "optional",
+      shine_note: "Your dot will shimmer a bit brighter.",
+      unsubscribe: "Cancel",
+      sub_month: "Subscription — $3.33 / month",
+      sub_year: "Subscription — $33.33 / year",
+      donate_once: "Donate (any amount)",
+      about: "About the project",
+      about_modal_title: "Vibro — about",
+      what_medit: "What is meditation?",
+
+      about_p1: "<b>Vibro is a vibration tuner and trainer of inner silence.</b>",
+      about_p2: "When thousands return to silence, their attention forms a coherent field — soft as breath, strong as the ocean. Each meditation is an impulse to this field; the more of us, the steadier the resonance.",
+      about_p3: "No mantras, no rituals — only attention to silence and to the pure vibration of body and consciousness. Your point on the map glows for 24 hours — join and add your impulse. <b>You meditate — the Earth breathes steadier.</b>",
+      about_p4: "Ten minutes already change the tone of the world. Two weeks of training to quiet the inner «chatter» — and you’ll feel the mood and frequency of your consciousness shift.",
+      about_p5: "There are many techniques and descriptions. The essence is simple: meditation is entering silence where thoughts stop and the inner voice no longer disturbs.",
+      about_p6: "It takes practice. Spend at least 10 minutes daily. Sit or lie comfortably; make sure nothing distracts you. If noises interfere, play calm music quietly.",
+      about_p7: "Close your eyes and switch off self-talk. Thoughts will appear anyway — crumple each into a ball and throw it through a flaming hoop. It burns — and you return to silence. Again and again.",
+      about_p8: "With practice you'll radiate new vibrations; silence deepens. Just show up every day and train to catch the quiet.",
+
+      d300: "5 minutes",
+      d600: "10 minutes (recommended to start)",
+      d900: "15 minutes",
+      d1200:"20 minutes",
+      d1500:"25 minutes",
+      d1800:"30 minutes",
+      d3600:"60 minutes",
+
+      err_sec: "Seconds must be 00..59.",
+      err_gt0: "Enter a value greater than zero.",
+      err_timer: "The timer didn't show that much time 🙏",
+
+      unit_min: "min", unit_sec:"sec",
+    },
+    ru: {
+      map_title: "Карта медитаций за 24 часа",
+      map_sub_html: "Отметить себя можно <b>только после медитации</b> — точка видна сутки.<br>Карта показывает, что мы вместе.",
+      map_hint_html: "<b style='color:#7fe39a'>Теперь ты можешь отметить себя на карте:</b> удерживай палец/мышь ~0.5 сек в нужной точке.",
+      about_btn: "О проекте",
+      sub_active: "Подписка активна",
+      map_light: "Светлая карта",
+      map_dark: "Тёмная карта",
+      win_1h: "За последний час",
+      win_6h: "За последние 6 часов",
+      win_12h: "За последние 12 часов",
+      win_24h: "За последние 24 часа",
+
+      hero_title: "Vibro — пространство внутренней тишины",
+      hero_sub1: "Минимально. Без слов. Ты — в тишине.",
+      hero_sub2: "Медитация — это тренировка внутреннего безмолвия.",
+      reco: "Рекомендация: начни с 10 минут. Не спеши, увеличивай мягко по ощущению.",
+      select_label: "Выберите по желанию длительность вашей медитации",
+
+      start: "Начать медитацию",
+      stop: "Завершить медитацию",
+      timer_label: "Таймер медитации",
+      goal: "цель",
+
+      enter_silence: "Напиши время тишины в формате <b>мм:сс</b>.",
+      save: "Сохранить",
+      maximum: "Максимум:",
+      by_timer: "(по таймеру)",
+
+      tip_prefix: "Совет:",
+      toast_after: "Теперь ты можешь отметить себя на карте — удерживай палец/мышь 0.5 сек в нужной точке.",
+      toast_blocked: "Можно отметить себя только после завершения медитации 🙏",
+
+      today: "Сегодня тишины",
+      week: "На этой неделе",
+      free_note: "Vibro бесплатен. Подписки и донат — см. в меню (иконка справа в шапке карты).",
+
+      settings: "Настройки",
+      dark_theme: "Тёмная тема",
+      sound: "Звук сигналов",
+      language: "Язык",
+      support: "Поддержать",
+      opt_in: "по вашему желанию",
+      shine_note: "Ваша точка будет мерцать немножко ярче остальных.",
+      unsubscribe: "Отменить",
+      sub_month: "Подписка — $3.33 / мес",
+      sub_year: "Подписка — $33.33 / год",
+      donate_once: "Донат (любая сумма)",
+      about: "О проекте",
+      about_modal_title: "Vibro — о проекте",
+      what_medit: "Что такое медитация?",
+
+      about_p1: "<b>Vibro — тюнер вибраций и тренажёр внутреннего безмолвия.</b>",
+      about_p2: "Когда тысячи людей возвращают тишину, их внимание складывается в общее поле согласованности — мягкое, как дыхание, и сильное, как океан. Каждая медитация — импульс в это поле; чем нас больше, тем устойчивее резонанс.",
+      about_p3: "Никаких мантр и ритуалов — только внимание к безмолвию и чистой вибрации тела и сознания. Твоя точка на карте светится сутки — присоединяйся и добавь свой импульс. <b>Ты медитируешь — Земля дышит ровнее.</b>",
+      about_p4: "Десять минут тишины уже меняют звучание мира. А через две недели тренировок в отключении внутренней «болтовни» ты заметишь, как меняются настроение и частота твоего сознания.",
+      about_p5: "Техник много, но суть проста: медитация — вход в безмолвие, где мысли останавливаются и внутренний голос не тревожит.",
+      about_p6: "Нужен навык. Каждый день уделяй хотя бы 10 минут. Сядь или ляг удобно. Если мешают звуки, надень наушники с тихой музыкой.",
+      about_p7: "Закрой глаза и выключай внутренний диалог. Мысли пришли — скомкай и брось в горящий обруч. Они сгорят — вернись к тишине. Снова и снова.",
+      about_p8: "С практикой тело и сознание излучают новые вибрации, безмолвие углубляется. Просто приходи каждый день и тренируйся ловить тишину.",
+
+      d300:"5 минут", d600:"10 минут (рекомендуем начать)", d900:"15 минут", d1200:"20 минут", d1500:"25 минут", d1800:"30 минут", d3600:"60 минут",
+
+      err_sec:"Секунды 00..59.", err_gt0:"Укажи больше нуля.", err_timer:"Столько времени таймер не показал 🙏",
+
+      unit_min:"мин", unit_sec:"сек",
+    },
+    es: {
+      map_title: "Mapa de meditaciones de las últimas 24 horas",
+      map_sub_html: "Puedes marcarte <b>solo después de meditar</b> — el punto es visible durante 24 horas.<br>El mapa muestra que estamos juntos.",
+      map_hint_html: "<b style='color:#7fe39a'>Ahora puedes marcarte en el mapa:</b> mantén pulsado ~0,5 s en el lugar.",
+      about_btn: "Acerca de",
+      sub_active: "Suscripción activa",
+      map_light: "Mapa claro",
+      map_dark: "Mapa oscuro",
+      win_1h: "Última hora",
+      win_6h: "Últimas 6 horas",
+      win_12h: "Últimas 12 horas",
+      win_24h: "Últimas 24 horas",
+
+      hero_title: "Vibro — espacio de silencio interior",
+      hero_sub1: "Minimalista. Sin palabras. Estás en silencio.",
+      hero_sub2: "La meditación es el entrenamiento del silencio interior.",
+      reco: "Recomendación: empieza con 10 minutos. No te apures; aumenta con suavidad según lo sientas.",
+      select_label: "Elige la duración de tu meditación (si lo deseas)",
+
+      start: "Iniciar meditación",
+      stop: "Terminar meditación",
+      timer_label: "Temporizador de meditación",
+      goal: "meta",
+
+      enter_silence: "Escribe tu tiempo de silencio en formato <b>MM:SS</b>.",
+      save: "Guardar",
+      maximum: "Máximo:",
+      by_timer: "(según el temporizador)",
+
+      tip_prefix: "Consejo:",
+      toast_after: "Ahora puedes marcarte en el mapa — mantén pulsado 0,5 s en el lugar.",
+      toast_blocked: "Solo puedes marcarte después de terminar la meditación 🙏",
+
+      today: "Silencio hoy",
+      week: "Esta semana",
+      free_note: "Vibro es gratuito. Suscripciones y donaciones — consúltalo en el menú (icono a la derecha en el encabezado del mapa).",
+
+      settings: "Ajustes",
+      dark_theme: "Tema oscuro",
+      sound: "Sonido de campanillas",
+      language: "Idioma",
+      support: "Apoyar",
+      opt_in: "si quieres",
+      shine_note: "Tu punto brillará un poco más que los demás.",
+      unsubscribe: "Cancelar",
+      sub_month: "Suscripción — $3.33 / mes",
+      sub_year: "Suscripción — $33.33 / año",
+      donate_once: "Donar (cualquier cantidad)",
+      about: "Acerca del proyecto",
+      about_modal_title: "Vibro — acerca de",
+      what_medit: "¿Qué es la meditación?",
+
+      about_p1: "<b>Vibro es un afinador de vibración y un entrenador del silencio interior.</b>",
+      about_p2: "Cuando miles vuelven al silencio, su atención forma un campo coherente — suave como la respiración y fuerte como el océano. Cada meditación es un impulso a ese campo; cuantos más seamos, más estable es la resonancia.",
+      about_p3: "Sin mantras ni rituales — solo atención al silencio y a la vibración pura del cuerpo y la conciencia. Tu punto en el mapa brilla durante 24 horas — únete y añade tu impulso. <b>Tú meditas — la Tierra respira con más calma.</b>",
+      about_p4: "Diez minutos de silencio ya cambian el tono del mundo. Tras dos semanas entrenando para apagar el «rumor» interno, notarás cómo cambian tu estado de ánimo y la frecuencia de tu conciencia.",
+      about_p5: "Hay muchas técnicas y descripciones, pero la esencia es simple: meditar es entrar en el silencio donde los pensamientos se detienen y la voz interna deja de perturbar.",
+      about_p6: "Hace falta práctica. Dedica al menos 10 minutos al día. Siéntate o recuéstate cómodo; procura que nada te distraiga. Si el ruido molesta, pon música tranquila a volumen bajo.",
+      about_p7: "Cierra los ojos y apaga el diálogo interior. Los pensamientos aparecerán; arrúgalos como papel y lánzalos por un aro en llamas. Se queman — y vuelves al silencio. Una y otra vez.",
+      about_p8: "Con la práctica, cuerpo y conciencia irradian nuevas vibraciones y el silencio se profundiza. Solo preséntate todos los días y entrena para atrapar la quietud.",
+
+      d300:  "5 minutos",
+      d600:  "10 minutos (recomendado para empezar)",
+      d900:  "15 minutos",
+      d1200: "20 minutos",
+      d1500: "25 minutos",
+      d1800: "30 minutos",
+      d3600: "60 minutos",
+
+      err_sec:  "Los segundos deben ser 00..59.",
+      err_gt0:  "Introduce un valor mayor que cero.",
+      err_timer:"El temporizador no mostró tanto tiempo 🙏",
+
+      unit_min: "min", unit_sec:"seg",
+    },
+    pt: {
+      map_title: "Mapa de meditações das últimas 24 horas",
+      map_sub_html: "Você pode se marcar <b>apenas após meditar</b> — o ponto fica visível por 24 horas.<br>O mapa mostra que estamos juntos.",
+      map_hint_html: "<b style='color:#7fe39a'>Agora você pode se marcar no mapa:</b> mantenha pressionado ~0,5 s no ponto.",
+      about_btn: "Sobre",
+      sub_active: "Assinatura ativa",
+      map_light: "Mapa claro",
+      map_dark: "Mapa escuro",
+      win_1h: "Última hora",
+      win_6h: "Últimas 6 horas",
+      win_12h: "Últimas 12 horas",
+      win_24h: "Últimas 24 horas",
+
+      hero_title: "Vibro — espaço de silêncio interior",
+      hero_sub1: "Minimalista. Sem palavras. Você está em silêncio.",
+      hero_sub2: "Meditar é treinar o silêncio interior.",
+      reco: "Recomendação: comece com 10 minutos. Sem pressa; aumente suavemente conforme sentir.",
+      select_label: "Escolha a duração da sua meditação (se quiser)",
+
+      start: "Iniciar meditação",
+      stop: "Encerrar meditação",
+      timer_label: "Temporizador de meditação",
+      goal: "meta",
+
+      enter_silence: "Digite seu tempo de silêncio em <b>MM:SS</b>.",
+      save: "Salvar",
+      maximum: "Máximo:",
+      by_timer: "(pelo temporizador)",
+
+      tip_prefix: "Dica:",
+      toast_after: "Agora você pode se marcar no mapa — mantenha pressionado 0,5 s no ponto.",
+      toast_blocked: "Você só pode se marcar após terminar a meditação 🙏",
+
+      today: "Silêncio hoje",
+      week: "Nesta semana",
+      free_note: "Vibro é gratuito. Assinaturas e doações — veja no menu (ícone à direita no cabeçalho do mapa).",
+
+      settings: "Ajustes",
+      dark_theme: "Tema escuro",
+      sound: "Som dos sinos",
+      language: "Idioma",
+      support: "Apoiar",
+      opt_in: "opcional",
+      shine_note: "Seu ponto vai brilhar um pouco mais que os demais.",
+      unsubscribe: "Cancelar",
+      sub_month: "Assinatura — $3.33 / mês",
+      sub_year: "Assinatura — $33.33 / ano",
+      donate_once: "Doar (qualquer valor)",
+      about: "Sobre o projeto",
+      about_modal_title: "Vibro — sobre",
+      what_medit: "O que é meditação?",
+
+      about_p1: "<b>Vibro é um afinador de vibração e um treinador do silêncio interior.</b>",
+      about_p2: "Quando milhares voltam ao silêncio, sua atenção forma um campo coerente — suave como a respiração e forte como o oceano. Cada meditação é um impulso para esse campo; quanto mais gente, mais estável é a ressonância.",
+      about_p3: "Sem mantras nem rituais — apenas atenção ao silêncio e à vibração pura do corpo e da consciência. Seu ponto no mapa brilha por 24 horas — junte-se e acrescente seu impulso. <b>Você medita — a Terra respira mais calma.</b>",
+      about_p4: "Dez minutos já mudam o tom do mundo. Com duas semanas treinando para calar o «falatório» interno, você percebe a mudança no humor e na frequência da consciência.",
+      about_p5: "Há muitas técnicas e descrições, mas a essência é simples: meditar é entrar no silêncio onde os pensamentos param e a voz interna deixa de perturbar.",
+      about_p6: "Requer prática. Dedique ao menos 10 minutos por dia. Sente-se ou deite-se com conforto; garanta que nada atrapalhe. Se o ruído incomodar, use música calma em volume baixo.",
+      about_p7: "Feche os olhos e desligue o diálogo interno. Os pensamentos virão — amasse como papel e lance por um aro em chamas. Ele queima — o silêncio volta. De novo e de novo.",
+      about_p8: "Com a prática, corpo e consciência irradiam novas vibrações e o silêncio se aprofunda. Só apareça todos os dias e treine para captar a quietude.",
+
+      d300:  "5 minutos",
+      d600:  "10 minutos (recomendado para começar)",
+      d900:  "15 minutos",
+      d1200: "20 minutos",
+      d1500: "25 minutos",
+      d1800: "30 minutos",
+      d3600: "60 minutos",
+
+      err_sec:  "Os segundos devem ser 00..59.",
+      err_gt0:  "Informe um valor maior que zero.",
+      err_timer:"O temporizador não registrou tanto tempo 🙏",
+
+      unit_min: "min", unit_sec:"seg",
+    },
+    fr: {
+      map_title: "Carte des méditations sur 24 heures",
+      map_sub_html: "Tu peux te marquer <b>uniquement après la méditation</b> — le point reste visible 24 h.<br>La carte montre que nous sommes ensemble.",
+      map_hint_html: "<b style='color:#7fe39a'>Tu peux maintenant te marquer sur la carte :</b> appuie et maintiens ~0,5 s au bon endroit.",
+      about_btn: "À propos",
+      sub_active: "Abonnement actif",
+      map_light: "Carte claire",
+      map_dark: "Carte sombre",
+      win_1h: "Dernière heure",
+      win_6h: "6 dernières heures",
+      win_12h: "12 dernières heures",
+      win_24h: "24 dernières heures",
+
+      hero_title: "Vibro — espace de silence intérieur",
+      hero_sub1: "Minimal. Sans mots. Tu es dans le silence.",
+      hero_sub2: "La méditation est un entraînement au silence intérieur.",
+      reco: "Recommandation : commence par 10 minutes. Ne te presse pas ; augmente doucement selon ton ressenti.",
+      select_label: "Choisis la durée de ta méditation (si tu veux)",
+
+      start: "Commencer la méditation",
+      stop: "Terminer la méditation",
+      timer_label: "Minuteur de méditation",
+      goal: "objectif",
+
+      enter_silence: "Saisis ton temps de silence en <b>MM:SS</b>.",
+      save: "Enregistrer",
+      maximum: "Maximum :",
+      by_timer: "(selon le minuteur)",
+
+      tip_prefix: "Astuce :",
+      toast_after: "Tu peux maintenant te marquer sur la carte — maintiens 0,5 s à l’endroit choisi.",
+      toast_blocked: "Tu peux te marquer seulement après avoir terminé la méditation 🙏",
+
+      today: "Silence aujourd’hui",
+      week: "Cette semaine",
+      free_note: "Vibro est gratuit. Abonnements et dons — voir le menu (icône à droite dans l’en-tête de la carte).",
+
+      settings: "Paramètres",
+      dark_theme: "Thème sombre",
+      sound: "Son des signaux",
+      language: "Langue",
+      support: "Soutenir",
+      opt_in: "facultatif",
+      shine_note: "Ton point scintillera un peu plus que les autres.",
+      unsubscribe: "Résilier",
+      sub_month: "Abonnement — 3,33 $ / mois",
+      sub_year: "Abonnement — 33,33 $ / an",
+      donate_once: "Don (montant libre)",
+      about: "À propos du projet",
+      about_modal_title: "Vibro — à propos",
+      what_medit: "Qu’est-ce que la méditation ?",
+
+      about_p1: "<b>Vibro est un accordeur de vibration et un entraîneur du silence intérieur.</b>",
+      about_p2: "Quand des milliers de personnes reviennent au silence, leur attention forme un champ cohérent — doux comme le souffle, puissant comme l’océan. Chaque méditation est un élan vers ce champ ; plus nous sommes nombreux, plus la résonance est stable.",
+      about_p3: "Pas de mantras ni de rituels — seulement l’attention au silence et à la vibration pure du corps et de la conscience. Ton point sur la carte brille 24 heures — rejoins-nous et ajoute ton élan. <b>Tu médites — la Terre respire plus régulièrement.</b>",
+      about_p4: "Dix minutes suffisent déjà à changer la tonalité du monde. Après deux semaines d’entraînement à calmer le « bavardage » intérieur, tu remarqueras le changement d’humeur et de fréquence de ta conscience.",
+      about_p5: "Il existe de nombreuses techniques et descriptions, mais l’essentiel est simple : méditer, c’est entrer dans le silence où les pensées cessent et où la voix intérieure ne dérange plus.",
+      about_p6: "Cela demande de la pratique. Consacre au moins 10 minutes par jour. Assieds-toi ou allonge-toi confortablement et évite les distractions. Si le bruit gêne, mets une musique douce.",
+      about_p7: "Ferme les yeux et coupe le dialogue intérieur. Les pensées viendront ; froisse-les comme du papier et lance-les à travers un anneau de feu. Elles se consument — et tu reviens au silence. Encore et encore.",
+      about_p8: "Avec la pratique, le corps et la conscience rayonnent de nouvelles vibrations, et le silence s’approfondit. Présente-toi chaque jour et entraîne-toi à saisir le calme.",
+
+      d300:  "5 minutes",
+      d600:  "10 minutes (recommandé pour commencer)",
+      d900:  "15 minutes",
+      d1200: "20 minutes",
+      d1500: "25 minutes",
+      d1800: "30 minutes",
+      d3600: "60 minutes",
+
+      err_sec:  "Les secondes doivent être 00..59.",
+      err_gt0:  "Entre une valeur supérieure à zéro.",
+      err_timer:"Le minuteur n’a pas affiché autant de temps 🙏",
+
+      unit_min: "min", unit_sec:"sec",
+    },
+    de: {
+      map_title: "Meditationskarte der letzten 24 Stunden",
+      map_sub_html: "Du kannst dich <b>nur nach der Meditation</b> markieren — der Punkt bleibt 24 Stunden sichtbar.<br>Die Karte zeigt, dass wir zusammen sind.",
+      map_hint_html: "<b style='color:#7fe39a'>Jetzt kannst du dich auf der Karte markieren:</b> ca. 0,5 s auf die Stelle drücken und halten.",
+      about_btn: "Info",
+      sub_active: "Abo aktiv",
+      map_light: "Helle Karte",
+      map_dark: "Dunkle Karte",
+      win_1h: "Letzte Stunde",
+      win_6h: "Letzte 6 Stunden",
+      win_12h: "Letzte 12 Stunden",
+      win_24h: "Letzte 24 Stunden",
+
+      hero_title: "Vibro — Raum innerer Stille",
+      hero_sub1: "Minimal. Wortlos. Du bist in Stille.",
+      hero_sub2: "Meditation trainiert die innere Ruhe.",
+      reco: "Empfehlung: Starte mit 10 Minuten. Kein Stress; steigere sanft nach Gefühl.",
+      select_label: "Wähle (optional) deine Meditationsdauer",
+
+      start: "Meditation starten",
+      stop: "Beenden",
+      timer_label: "Meditations-Timer",
+      goal: "Ziel",
+
+      enter_silence: "Trage deine Stillezeit im Format <b>MM:SS</b> ein.",
+      save: "Speichern",
+      maximum: "Maximum:",
+      by_timer: "(laut Timer)",
+
+      tip_prefix: "Tipp:",
+      toast_after: "Du kannst dich nun auf der Karte markieren — 0,5 s auf die Stelle drücken.",
+      toast_blocked: "Markieren ist erst nach der Meditation möglich 🙏",
+
+      today: "Stille heute",
+      week: "Diese Woche",
+      free_note: "Vibro ist kostenlos. Abos & Spenden — im Menü (Icon rechts in der Kartenleiste).",
+
+      settings: "Einstellungen",
+      dark_theme: "Dunkles Thema",
+      sound: "Klangsignal",
+      language: "Sprache",
+      support: "Unterstützen",
+      opt_in: "optional",
+      shine_note: "Dein Punkt schimmert etwas heller.",
+      unsubscribe: "Kündigen",
+      sub_month: "Abo — 3,33 $ / Monat",
+      sub_year: "Abo — 33,33 $ / Jahr",
+      donate_once: "Spenden (beliebiger Betrag)",
+      about: "Über das Projekt",
+      about_modal_title: "Vibro — Über",
+      what_medit: "Was ist Meditation?",
+
+      about_p1: "<b>Vibro ist ein Schwingungs-Tuner und Trainer innerer Stille.</b>",
+      about_p2: "Wenn Tausende zur Stille zurückkehren, bildet ihre Aufmerksamkeit ein kohärentes Feld — sanft wie Atem, stark wie das Meer. Jede Meditation ist ein Impuls in dieses Feld; je mehr wir sind, desto stabiler die Resonanz.",
+      about_p3: "Keine Mantras, keine Rituale — nur Aufmerksamkeit für Stille und die reine Schwingung von Körper und Bewusstsein. Dein Punkt leuchtet 24 Stunden — mach mit und füge deinen Impuls hinzu. <b>Du meditierst — die Erde atmet ruhiger.</b>",
+      about_p4: "Zehn Minuten verändern bereits die Klangfarbe der Welt. Nach zwei Wochen Training, das innere «Geplapper» zu beruhigen, spürst du, wie sich Stimmung und Frequenz des Bewusstseins verändern.",
+      about_p5: "Es gibt viele Techniken, doch das Wesen ist einfach: Meditation ist das Eintreten in die Stille, wo Gedanken ruhen und die innere Stimme nicht stört.",
+      about_p6: "Es braucht Übung. Nimm dir täglich mindestens 10 Minuten. Bequem sitzen oder liegen, Störungen vermeiden. Stört Lärm, hilft leise Musik.",
+      about_p7: "Schließe die Augen und schalte Selbstgespräche aus. Gedanken kommen — zerknülle sie wie Papier und wirf sie durch einen Feuerring. Sie verbrennen — und du kehrst zur Stille zurück. Immer wieder.",
+      about_p8: "Mit Übung strahlen Körper und Bewusstsein neue Schwingungen aus; die Stille vertieft sich. Erscheine täglich und trainiere, die Ruhe zu fassen.",
+
+      d300:"5 Min", d600:"10 Min (empfohlen)", d900:"15 Min", d1200:"20 Min", d1500:"25 Min", d1800:"30 Min", d3600:"60 Min",
+
+      err_sec:"Sekunden müssen 00..59 sein.", err_gt0:"Bitte Wert > 0 eingeben.", err_timer:"So viel Zeit zeigte der Timer nicht 🙏",
+
+      unit_min:"Min", unit_sec:"Sek",
+    },
+    zh: {
+      map_title: "过去24小时冥想地图",
+      map_sub_html: "你可以在<b>冥想结束后</b>标记自己 — 点会显示24小时。<br>这张地图让我们彼此相连。",
+      map_hint_html: "<b style='color:#7fe39a'>现在即可在地图上标记：</b>在位置上长按约0.5秒。",
+      about_btn: "关于",
+      sub_active: "订阅已激活",
+      map_light: "浅色地图",
+      map_dark: "深色地图",
+      win_1h: "最近1小时",
+      win_6h: "最近6小时",
+      win_12h: "最近12小时",
+      win_24h: "最近24小时",
+
+      hero_title: "Vibro — 内在静默的空间",
+      hero_sub1: "极简。无言。你在静中。",
+      hero_sub2: "冥想是一种训练内在安静的练习。",
+      reco: "建议从10分钟开始。不要着急；按感觉温和增加。",
+      select_label: "（可选）选择冥想时长",
+
+      start: "开始冥想",
+      stop: "结束",
+      timer_label: "冥想计时器",
+      goal: "目标",
+
+      enter_silence: "以<b>MM:SS</b>格式填写你的静默时间。",
+      save: "保存",
+      maximum: "最大值：",
+      by_timer: "（以计时为准）",
+
+      tip_prefix: "提示：",
+      toast_after: "现在可以在地图上标记自己 — 在位置上长按0.5秒。",
+      toast_blocked: "完成冥想后才能标记自己 🙏",
+
+      today: "今日静默",
+      week: "本周",
+      free_note: "Vibro 免费。订阅与捐赠 — 见菜单（地图标题右侧图标）。",
+
+      settings: "设置",
+      dark_theme: "深色主题",
+      sound: "提示音",
+      language: "语言",
+      support: "支持",
+      opt_in: "可选",
+      shine_note: "你的点会稍微更亮一些。",
+      unsubscribe: "取消订阅",
+      sub_month: "订阅 — $3.33 / 月",
+      sub_year: "订阅 — $33.33 / 年",
+      donate_once: "捐赠（任意金额）",
+      about: "关于项目",
+      about_modal_title: "Vibro — 关于",
+      what_medit: "什么是冥想？",
+
+      about_p1: "<b>Vibro 是“振动调谐器”和“内在静默训练器”。</b>",
+      about_p2: "当成千上万人回到静默，他们的注意力汇聚成一致的场 —— 像呼吸般柔和，像海洋般有力。每次冥想都是这个场的一个脉冲；人数越多，共振越稳。",
+      about_p3: "没有咒语与仪式 —— 只有对静默的关注，以及身心纯净的振动。你的点会在地图上点亮24小时 —— 加入进来，贡献你的脉冲。<b>你冥想，地球呼吸更匀。</b>",
+      about_p4: "十分钟已足以改变世界的音色。两周训练让内在“喋喋不休”安静下来，你会感到心境与意识频率的变化。",
+      about_p5: "方法很多，本质很简单：冥想就是进入静默，思想止息，内在之声不再扰动。",
+      about_p6: "需要练习。每天至少10分钟。坐或躺都行，尽量不被打扰。若噪音干扰，可放些轻柔音乐。",
+      about_p7: "闭上眼，关闭内心独白。念头出现时，把它像纸团那样揉起，投进火环。它烧尽 —— 你回到静默。反复练习。",
+      about_p8: "随着练习，身心会发出新的振动，静默更深。每日到来，训练捕捉安静。",
+
+      d300:"5 分钟", d600:"10 分钟（推荐）", d900:"15 分钟", d1200:"20 分钟", d1500:"25 分钟", d1800:"30 分钟", d3600:"60 分钟",
+
+      err_sec:"秒需为 00..59。", err_gt0:"请输入大于 0 的值。", err_timer:"计时器未显示这么长时间 🙏",
+
+      unit_min:"分", unit_sec:"秒",
+    },
+    ar: {
+      map_title: "خريطة التأمل لآخر 24 ساعة",
+      map_sub_html: "يمكنك وضع علامتك <b>فقط بعد التأمل</b> — تبقى النقطة مرئية لمدة 24 ساعة.<br>الخريطة تُظهر أننا معًا.",
+      map_hint_html: "<b style='color:#7fe39a'>الآن يمكنك وضع علامتك على الخريطة:</b> اضغط مطولًا ~0.5 ثانية في الموضع.",
+      about_btn: "نبذة",
+      sub_active: "الاشتراك مُفعل",
+      map_light: "خريطة فاتحة",
+      map_dark: "خريطة داكنة",
+      win_1h: "آخر ساعة",
+      win_6h: "آخر 6 ساعات",
+      win_12h: "آخر 12 ساعة",
+      win_24h: "آخر 24 ساعة",
+
+      hero_title: "Vibro — مساحة السكون الداخلي",
+      hero_sub1: "بسيط. بلا كلمات. أنت في السكون.",
+      hero_sub2: "التأمل تدريب على هدوء الداخل.",
+      reco: "نوصي بالبدء بـ 10 دقائق. لا تتعجل؛ زد المدة بلطف حسب الشعور.",
+      select_label: "اختر مدة التأمل (اختياري)",
+
+      start: "ابدأ التأمل",
+      stop: "إنهاء",
+      timer_label: "مؤقت التأمل",
+      goal: "الهدف",
+
+      enter_silence: "أدخل زمن السكون بصيغة <b>MM:SS</b>.",
+      save: "حفظ",
+      maximum: "الحد الأقصى:",
+      by_timer: "(حسب المؤقت)",
+
+      tip_prefix: "نصيحة:",
+      toast_after: "الآن يمكنك وضع علامتك على الخريطة — اضغط مطولًا 0.5 ثانية.",
+      toast_blocked: "لا يمكنك وضع العلامة إلا بعد إنهاء التأمل 🙏",
+
+      today: "سكون اليوم",
+      week: "هذا الأسبوع",
+      free_note: "Vibro مجاني. الاشتراكات والتبرعات — من القائمة (الأيقونة يمين عنوان الخريطة).",
+
+      settings: "الإعدادات",
+      dark_theme: "سِمة داكنة",
+      sound: "صوت الجرس",
+      language: "اللغة",
+      support: "الدعم",
+      opt_in: "اختياري",
+      shine_note: "ستلمع نقطتك أكثر قليلًا من غيرها.",
+      unsubscribe: "إلغاء",
+      sub_month: "اشتراك — ‎$3.33 / شهريًا",
+      sub_year: "اشتراك — ‎$33.33 / سنويًا",
+      donate_once: "تبرع (أي مبلغ)",
+      about: "عن المشروع",
+      about_modal_title: "Vibro — نبذة",
+      what_medit: "ما هو التأمل؟",
+
+      about_p1: "<b>Vibro مُنظّم للاهتزاز ومُدرِّب للسكون الداخلي.</b>",
+      about_p2: "عندما يعود الآلاف إلى السكون، تصنع انتباهاتهم حقلًا متماسكًا — لطيفًا كالتنفس وقويًا كالمحيط. كل تأمل نبضة في هذا الحقل؛ كلما كثرنا ازدادت الرنين ثباتًا.",
+      about_p3: "لا مانترا ولا طقوس — فقط انتباه للسكون واهتزاز نقي للجسد والوعي. تومض نقطتك على الخريطة لمدة 24 ساعة — انضم وأضف نبضتك. <b>تتأمل — فتتنفس الأرض بانتظامٍ أكثر.</b>",
+      about_p4: "عشر دقائق تغيّر نبرة العالم. وبعد أسبوعين من تدريب إسكات «الثرثرة» الداخلية ستشعر بتغيّر المزاج وتواتر الوعي.",
+      about_p5: "الأساليب كثيرة، والجوهر بسيط: التأمل دخولٌ إلى سكونٍ تتوقف فيه الأفكار ولا يزعج الصوت الداخلي.",
+      about_p6: "يحتاج ممارسة. خصص 10 دقائق يوميًا. اجلس أو استلقِ براحة وتجنب المشتتات. إن أزعجك الضجيج فشغّل موسيقى هادئة.",
+      about_p7: "أغمض عينيك وأوقف الحديث الذاتي. إن ظهرت فكرة، كُرْها ككرة ورمِها في طوقٍ مشتعل. تحترق — وتعود إلى السكون. مرة بعد مرة.",
+      about_p8: "مع الممارسة يشع الجسد والوعي اهتزازاتٍ جديدة ويزداد السكون عمقًا. فقط احضر كل يوم وتدرّب على التقاط الهدوء.",
+
+      d300:"5 دقائق", d600:"10 دقائق (مقترح)", d900:"15 دقيقة", d1200:"20 دقيقة", d1500:"25 دقيقة", d1800:"30 دقيقة", d3600:"60 دقيقة",
+
+      err_sec:"الثواني يجب أن تكون 00..59.", err_gt0:"أدخل قيمة أكبر من الصفر.", err_timer:"لم يُظهر المؤقت هذا القدر من الوقت 🙏",
+
+      unit_min:"د", unit_sec:"ث",
+    },
+    ja: {
+      map_title: "過去24時間の瞑想マップ",
+      map_sub_html: "自分をマークできるのは<b>瞑想の後だけ</b>です — 点は24時間表示されます。<br>このマップは、私たちが一緒であることを示します。",
+      map_hint_html: "<b style='color:#7fe39a'>今すぐ地図に自分をマーク:</b> その場所を約0.5秒長押し。",
+      about_btn: "概要",
+      sub_active: "サブスクリプション有効",
+      map_light: "ライトマップ",
+      map_dark: "ダークマップ",
+      win_1h: "直近1時間",
+      win_6h: "直近6時間",
+      win_12h: "直近12時間",
+      win_24h: "直近24時間",
+
+      hero_title: "Vibro — 内なる静けさの空間",
+      hero_sub1: "ミニマル。言葉はいらない。あなたは静けさの中に。",
+      hero_sub2: "瞑想は内なる静寂を鍛えること。",
+      reco: "おすすめ：まずは10分から。焦らず、心地よさに合わせて少しずつ。",
+      select_label: "（任意）瞑想の時間を選ぶ",
+
+      start: "瞑想を開始",
+      stop: "終了する",
+      timer_label: "瞑想タイマー",
+      goal: "目標",
+
+      enter_silence: "<b>MM:SS</b>形式で静けさの時間を入力。",
+      save: "保存",
+      maximum: "最大：",
+      by_timer: "（タイマー基準）",
+
+      tip_prefix: "ヒント：",
+      toast_after: "地図に自分をマークできます — 場所を0.5秒長押し。",
+      toast_blocked: "瞑想を終えてからマークできます 🙏",
+
+      today: "今日の静けさ",
+      week: "今週",
+      free_note: "Vibroは無料です。サブスクと寄付はメニュー（マップ右上のアイコン）から。",
+
+      settings: "設定",
+      dark_theme: "ダークテーマ",
+      sound: "チャイム音",
+      language: "言語",
+      support: "支援",
+      opt_in: "任意",
+      shine_note: "あなたの点は少しだけ明るく輝きます。",
+      unsubscribe: "解約",
+      sub_month: "サブスク — $3.33 / 月",
+      sub_year: "サブスク — $33.33 / 年",
+      donate_once: "寄付（任意の金額）",
+      about: "プロジェクトについて",
+      about_modal_title: "Vibro — 概要",
+      what_medit: "瞑想とは？",
+
+      about_p1: "<b>Vibroは、振動のチューナーであり、内なる静けさのトレーナーです。</b>",
+      about_p2: "何千人もの人が静けさに戻ると、その注意は一つのコヒーレントな場を形作ります — 息のように穏やかで、海のように力強い。各瞑想はその場への一つのインパルス。人数が増えるほど共鳴は安定します。",
+      about_p3: "マントラも儀式もありません — あるのは静けさへの注意と、身体と意識の純粋な振動だけ。地図上のあなたの点は24時間輝きます — 参加して、あなたのインパルスを加えてください。<b>あなたが瞑想すれば、地球はより整った呼吸になります。</b>",
+      about_p4: "10分でも世界の音色は変わります。2週間、内なる「おしゃべり」を静める訓練を続ければ、気分や意識の周波が変わるのを感じるでしょう。",
+      about_p5: "方法は多くとも本質はシンプル。瞑想とは、思考が止み内なる声が邪魔しない静けさへ入ること。",
+      about_p6: "習慣が必要です。毎日10分は確保しましょう。座っても横になっても構いません。邪魔が入らない環境を。雑音が気になるなら小さな音量の穏やかな音楽を。",
+      about_p7: "目を閉じ、内なる独り言をオフに。思考が現れたら、紙くずのように丸めて炎の輪へ投げ入れてください。燃え尽き、静けさに戻ります。何度でも。",
+      about_p8: "続ければ、身体と意識は新しい振動を放ち、静けさは深まります。毎日ただ座り、静けさを捉える訓練を。",
+
+      d300:  "5分",
+      d600:  "10分（初めてにおすすめ）",
+      d900:  "15分",
+      d1200: "20分",
+      d1500: "25分",
+      d1800: "30分",
+      d3600: "60分",
+
+      err_sec:  "秒は00..59で入力してください。",
+      err_gt0:  "0より大きい値を入力してください。",
+      err_timer:"タイマーで表示された時間を超えています 🙏",
+
+      unit_min: "分", unit_sec:"秒",
+    }
+  };
+
+  const LANG_KEY='vibro_lang';
+
+  function normalizeLang(lc){
+    lc = (lc || '').toLowerCase();
+    const base = lc.split(/[-_]/)[0];
+    const map = {
+      'en':'en','en-us':'en','en-gb':'en',
+      'ru':'ru',
+      'es':'es','es-419':'es','es-mx':'es','es-es':'es',
+      'pt':'pt','pt-br':'pt','pt-pt':'pt',
+      'fr':'fr','fr-ca':'fr','fr-fr':'fr',
+      'de':'de','de-de':'de','de-at':'de','de-ch':'de',
+      'zh':'zh','zh-cn':'zh','zh-sg':'zh','zh-hans':'zh','zh-my':'zh',
+      'zh-tw':'zh','zh-hk':'zh','zh-mo':'zh', // сводим всё к zh (упрощёнка в тексте)
+      'ar':'ar','ar-sa':'ar','ar-eg':'ar','ar-ly':'ar',
+      'ja':'ja','ja-jp':'ja'
+    };
+    return map[lc] || map[base] || 'en';
+  }
+
+  let currentLang = normalizeLang(localStorage.getItem(LANG_KEY) || navigator.language || 'en');
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir  = (currentLang==='ar') ? 'rtl' : 'ltr';
+
+  const t = (k)=> (I18N[currentLang] && I18N[currentLang][k]) || (I18N.en[k] ?? k);
+
+  function applyI18n(){
+    document.querySelectorAll('[data-i18n]').forEach(el=>{ el.innerHTML = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label', t(el.dataset.i18nTitle)); });
+
+    $('mapSubtitle').innerHTML = t('map_sub_html');
+    $('mapHint').innerHTML = t('map_hint_html');
+
+    const map = {300:'d300',600:'d600',900:'d900',1200:'d1200',1500:'d1500',1800:'d1800',3600:'d3600'};
+    for (const val in map){ const opt = $('opt'+val); if(opt) opt.textContent = t(map[val]); }
+
+    $('start').textContent = t('start');
+    $('stop').textContent = t('stop');
+    $('timerLabel').textContent = t('timer_label');
+    $('timerTarget').textContent = "/ "+new Date(tGoal*1000).toISOString().substr(14,5)+" "+t('goal');
+
+    $('enterSilenceLbl').innerHTML = t('enter_silence');
+    $('saveScore').textContent = t('save');
+
+    $('lblToday').textContent = t('today');
+    $('lblWeek').textContent = t('week');
+    $('freeNote').textContent = t('free_note');
+
+    $('subBadge').title = t('sub_active');
+
+    ['about_p1','about_p2','about_p3','about_p4','about_p5','about_p6','about_p7','about_p8']
+      .forEach(id=> $(id).innerHTML = t(id));
+
+    $('aboutTitle').textContent = t('about_modal_title');
+    ['modal_p1','modal_p2','modal_p3','modal_p4','modal_p5','modal_p6','modal_p7','modal_p8']
+      .forEach((id,i)=> $(id).innerHTML = t('about_p'+(i+1)));
+
+    // RTL для арабского
+    document.documentElement.dir  = (currentLang==='ar') ? 'rtl' : 'ltr';
+
+    syncChakraUI();
+    $('toastText').textContent = t('toast_after');
+  }
+  function setLang(lang){
+    currentLang = normalizeLang(lang);
+    localStorage.setItem(LANG_KEY, currentLang);
+    document.documentElement.lang = currentLang;
+    document.documentElement.dir  = (currentLang==='ar') ? 'rtl' : 'ltr';
+    applyI18n();
+    syncLangUI();
+  }
+  function syncLangUI(){
+    const ids = ['Ru','En','Es','Pt','Fr','De','Zh','Ar','Ja'];
+    ids.forEach(s=> $('lang'+s) && $('lang'+s).classList.toggle('primary', currentLang===s.toLowerCase()));
+  }
+
+  /* ===== utility ===== */
+  const fmt = s => {
+    const m=Math.floor(s/60), ss=Math.floor(s%60);
+    const mm = m ? (m+" "+t('unit_min')+" ") : "";
+    return mm + ss + " " + t('unit_sec');
+  };
+
+  const UID = (()=>{try{let v=localStorage.getItem('vibro_uid'); if(!v){v=(crypto&&crypto.randomUUID)?crypto.randomUUID():'u_'+Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem('vibro_uid',v);} return v;}catch{return'local';}})();
+
+  /* ---------- тема ---------- */
+  const THEME_KEY = 'vibro_theme';
+  const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  const savedTheme = localStorage.getItem(THEME_KEY);
+  if (savedTheme === 'light' || (!savedTheme && prefersLight)) document.body.classList.add('theme-light');
+
+  const themeEl = $('themeToggle');
+  if (themeEl){
+    themeEl.checked = !document.body.classList.contains('theme-light');
+    themeEl.onchange = () => {
+      const dark = themeEl.checked;
+      if (dark) document.body.classList.remove('theme-light');
+      else document.body.classList.add('theme-light');
+      localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light');
+    };
+  }
+
+  /* ---------- звуки ---------- */
+  const SOUND_KEY='vibro_sound';
+  let soundOn = (localStorage.getItem(SOUND_KEY) ?? '1') === '1';
+  $('soundToggle').checked = soundOn;
+  $('soundToggle').onchange = ()=>{ soundOn = $('soundToggle').checked; localStorage.setItem(SOUND_KEY, soundOn?'1':'0'); };
+
+  let actx=null;
+  function ensureAudio(){ if(!actx){ actx=new (window.AudioContext||window.webkitAudioContext)(); } return actx; }
+  function chime(freq=660, time=0.25, vol=0.08){
+    if(!soundOn) return;
+    const ac=ensureAudio(); const now=ac.currentTime;
+    const o=ac.createOscillator(); const g=ac.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(freq, now);
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(vol, now+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now+time);
+    o.connect(g).connect(ac.destination); o.start(now); o.stop(now+time+0.02);
+  }
+  function startSound(){ chime(660,0.18,0.08); setTimeout(()=>chime(880,0.18,0.06),120); }
+  function stopSound(){ chime(523.25,0.22,0.08); setTimeout(()=>chime(392,0.25,0.06),160); }
+  function savedSound(){ chime(740,0.12,0.06); }
+
+  /* ---------- подписка ---------- */
+  const SUB_KEY='vibro_sub';
+  let isSub = (localStorage.getItem(SUB_KEY) ?? '0') === '1';
+  function syncSubUI(){
+    document.body.classList.toggle('is-subscriber', isSub);
+    const row = $('subStatusRow'); if(row) row.style.display = isSub ? 'flex' : 'none';
+    const badge = $('subBadge'); if(badge) badge.style.display = isSub ? 'grid' : 'none';
+  }
+  syncSubUI();
+
+  $('subMonth').onclick=()=>{ 
+    isSub=true; localStorage.setItem(SUB_KEY,'1'); syncSubUI(); 
+    alert(currentLang==='ru'?'Спасибо за поддержку! Подписка активна 🙏'
+      : currentLang==='es'?'¡Gracias! La suscripción está activa 🙏'
+      : currentLang==='pt'?'Obrigado! A assinatura está ativa 🙏'
+      : currentLang==='fr'?'Merci ! L’abonnement est actif 🙏'
+      : currentLang==='de'?'Danke! Abo ist aktiv 🙏'
+      : currentLang==='zh'?'谢谢支持！订阅已激活 🙏'
+      : currentLang==='ar'?'شكرًا لدعمك! تم تفعيل الاشتراك 🙏'
+      : currentLang==='ja'?'ありがとう！サブスクが有効になりました 🙏'
+      : 'Thank you! Subscription is active 🙏'); 
+  };
+  $('subYear').onclick =()=>{ 
+    isSub=true; localStorage.setItem(SUB_KEY,'1'); syncSubUI(); 
+    alert(currentLang==='ru'?'Спасибо за поддержку! Подписка активна 🙏'
+      : currentLang==='es'?'¡Gracias! La suscripción está activa 🙏'
+      : currentLang==='pt'?'Obrigado! A assinatura está ativa 🙏'
+      : currentLang==='fr'?'Merci ! L’abonnement est actif 🙏'
+      : currentLang==='de'?'Danke! Abo ist aktiv 🙏'
+      : currentLang==='zh'?'谢谢支持！订阅已激活 🙏'
+      : currentLang==='ar'?'شكرًا لدعمك! تم تفعيل الاشتراك 🙏'
+      : currentLang==='ja'?'ありがとう！サブスクが有効になりました 🙏'
+      : 'Thank you! Subscription is active 🙏'); 
+  };
+  $('donateOnce').onclick=()=>alert(
+    currentLang==='ru'?'Спасибо за намерение поддержать! Донаты подключим в следующей версии 🙏'
+    : currentLang==='es'?'¡Gracias por tu apoyo! Activaremos las donaciones en la próxima versión 🙏'
+    : currentLang==='pt'?'Obrigado pelo apoio! Vamos ativar as doações na próxima versão 🙏'
+    : currentLang==='fr'?'Merci pour ton soutien ! Les dons seront activés dans la prochaine version 🙏'
+    : currentLang==='de'?'Danke für deine Unterstützung! Spenden kommen in der nächsten Version 🙏'
+    : currentLang==='zh'?'感谢你的支持！捐赠功能会在下个版本开放 🙏'
+    : currentLang==='ar'?'شكرًا لدعمك! سنفعّل التبرعات في الإصدار التالي 🙏'
+    : currentLang==='ja'?'応援ありがとう！寄付は次のバージョンで有効化します 🙏'
+    : 'Thank you for the intention to support! Donations will be enabled in the next version 🙏'
+  );
+  const unsubBtn=$('unsubscribeBtn');
+  if (unsubBtn) unsubBtn.onclick=()=>{ 
+    const msg = currentLang==='ru'?'Отменить подписку?'
+      : currentLang==='es'?'¿Cancelar la suscripción?'
+      : currentLang==='pt'?'Cancelar assinatura?'
+      : currentLang==='fr'?'Résilier l’abonnement ?'
+      : currentLang==='de'?'Abo kündigen?'
+      : currentLang==='zh'?'取消订阅？'
+      : currentLang==='ar'?'إلغاء الاشتراك؟'
+      : currentLang==='ja'?'サブスクを解約しますか？'
+      : 'Cancel subscription?';
+    if(confirm(msg)){ 
+      isSub=false; localStorage.setItem(SUB_KEY,'0'); syncSubUI(); 
+      alert(currentLang==='ru'?'Подписка отменена. Спасибо, что были с нами 🙏'
+        : currentLang==='es'?'Suscripción cancelada. Gracias por acompañarnos 🙏'
+        : currentLang==='pt'?'Assinatura cancelada. Obrigado por estar conosco 🙏'
+        : currentLang==='fr'?'Abonnement résilié. Merci d’avoir été avec nous 🙏'
+        : currentLang==='de'?'Abo gekündigt. Danke, dass du dabei warst 🙏'
+        : currentLang==='zh'?'订阅已取消。感谢一路相伴 🙏'
+        : currentLang==='ar'?'تم إلغاء الاشتراك. شكرًا لوجودك معنا 🙏'
+        : currentLang==='ja'?'解約しました。これまでありがとう 🙏'
+        : 'Subscription cancelled. Thank you for being with us 🙏'); 
+    } 
+  };
+
+  /* ---------- UI / логика ---------- */
+  const CHAKRAS_BASE = [
+    {min:0,max:599,color:"#ff2d55"},
+    {min:600,max:899,color:"#ff7a00"},
+    {min:900,max:1199,color:"#ffd60a"},
+    {min:1200,max:1499,color:"#34c759"},
+    {min:1500,max:1799,color:"#0a84ff"},
+    {min:1800,max:3599,color:"#7c52ff"},
+    {min:3600,max:1e9,color:"#b66dff"},
+  ];
+  const CHAKRA_NAMES = {
+    ru:["Красный (Муладхара)","Оранжевый (Свадхистана)","Жёлтый (Манипура)","Зелёный (Анахата)","Голубой (Вишуддха)","Индиго (Аджна)","Фиолетовый (Сахасрара)"],
+    en:["Red (Muladhara)","Orange (Svadhisthana)","Yellow (Manipura)","Green (Anahata)","Blue (Vishuddha)","Indigo (Ajna)","Violet (Sahasrara)"],
+    es:["Rojo (Muladhara)","Naranja (Svadhisthana)","Amarillo (Manipura)","Verde (Anahata)","Azul (Vishuddha)","Índigo (Ajna)","Violeta (Sahasrara)"],
+    pt:["Vermelho (Muladhara)","Laranja (Svadhisthana)","Amarelo (Manipura)","Verde (Anahata)","Azul (Vishuddha)","Índigo (Ajna)","Violeta (Sahasrara)"],
+    fr:["Rouge (Muladhara)","Orange (Svadhisthana)","Jaune (Manipura)","Vert (Anahata)","Bleu (Vishuddha)","Indigo (Ajna)","Violet (Sahasrara)"],
+    de:["Rot (Muladhara)","Orange (Svadhisthana)","Gelb (Manipura)","Grün (Anahata)","Blau (Vishuddha)","Indigo (Ajna)","Violett (Sahasrara)"],
+    zh:["红（海底轮）","橙（脐轮）","黄（太阳丛）","绿（心轮）","蓝（喉轮）","靛（眉心轮）","紫（顶轮）"],
+    ar:["أحمر (مولادهارا)","برتقالي (سفادهستانا)","أصفر (مانيپورا)","أخضر (أناهاتا)","أزرق (فيشودها)","نيلي (أجنا)","بنفسجي (ساهسرارا)"],
+    ja:["赤（ムーラダーラ）","橙（スヴァーディシュターナ）","黄（マニプーラ）","緑（アナーハタ）","青（ヴィシュッダ）","藍（アージュナー）","紫（サハスラーラ）"]
+  };
+  const CH_VIS=[
+    {core:1.2, ring:8,  rings:1},
+    {core:1.2, ring:10, rings:1},
+    {core:1.3, ring:12, rings:2},
+    {core:1.3, ring:14, rings:2},
+    {core:1.4, ring:16, rings:3},
+    {core:1.5, ring:18, rings:3},
+    {core:1.6, ring:22, rings:4},
+  ];
+  function chakraForDur(sec){
+    for (let i=0;i<CHAKRAS_BASE.length;i++){
+      const c=CHAKRAS_BASE[i]; if (sec>=c.min && sec<=c.max) { return {...c, idx:i, name:CHAKRA_NAMES[currentLang][i]}; }
+    }
+    return {...CHAKRAS_BASE[0], idx:0, name:CHAKRA_NAMES[currentLang][0]};
+  }
+  function syncChakraUI(){
+    const dur = +$('duration').value; const ch = chakraForDur(dur);
+    $('chakraDot').style.background = ch.color; $('chakraText').textContent = ch.name; $('chakraText').style.color = ch.color;
+  }
+
+  const ADV_TXT = {
+    ru:["Лучше медитировать не на полный желудок — тишина приходит легче.","Стрессовый день? Мысли громче. Успокоишь — двойная победа.","Мысль, которая мешает: скомкай её словно бумагу и брось в огнённое кольцо, как мяч. Она сгорает — внутри снова тишина.","Смотри в сердце — тепло, расширение, покой.","С выдохом расслабляй плечи и лицо — ум сразу тише."],
+    en:["It's easier to enter silence on an empty stomach.","Stressful day? Thoughts get louder. Calm them — double win.","Annoying thought? Crumple it like paper and throw it through a flaming hoop. It burns — silence returns.","Look into the heart — warmth, expansion, calm.","Relax shoulders and face with the exhale — mind softens."],
+    es:["Es más fácil entrar en silencio con el estómago ligero.","¿Día con estrés? Los pensamientos se vuelven más fuertes. Calma — doble victoria.","¿Un pensamiento molesto? Arrúgalo como papel y lánzalo por un aro en llamas. Se quema — y regresa el silencio.","Mira al corazón — calor, expansión, calma.","Con la exhalación relaja hombros y rostro — la mente se suaviza."],
+    pt:["É mais fácil entrar no silêncio com o estômago leve.","Dia estressante? Os pensamentos ficam mais altos. Acalme-os — vitória dupla.","Pensamento incômodo? Amasse como papel e lance por um aro em chamas. Ele queima — o silêncio volta.","Olhe para o coração — calor, expansão, calma.","Relaxe ombros e rosto na expiração — a mente suaviza."],
+    fr:["Il est plus facile d’entrer dans le silence l’estomac léger.","Journée stressante ? Les pensées deviennent plus fortes. Calme-les — double victoire.","Une pensée gênante ? Froisse-la comme du papier et lance-la dans un anneau de feu. Elle brûle — et le silence revient.","Regarde dans le cœur — chaleur, expansion, calme.","Avec l’expiration, détends les épaules et le visage — l’esprit s’adoucit."],
+    de:["Mit leichtem Magen fällt der Einstieg in die Stille leichter.","Stressiger Tag? Gedanken werden lauter. Beruhige sie — doppelter Gewinn.","Störender Gedanke? Zerknülle ihn wie Papier und wirf ihn durch einen Feuerring. Er verbrennt — Stille kehrt zurück.","Blicke ins Herz — Wärme, Weite, Ruhe.","Lass mit dem Ausatmen Schultern und Gesicht los — der Geist wird weich."],
+    zh:["空腹更容易进入静默。","压力大的一天？念头会更响。安静它们 —— 双重胜利。","烦人的念头？像纸团一样揉起，丢进火环。烧尽 —— 静默归来。","把注意放在心口 —— 温暖、扩展、安定。","呼气时放松肩膀和脸 —— 心更柔和。"],
+    ar:["المعدة الخفيفة تسهّل دخول السكون.","يوم مرهق؟ تصبح الأفكار أعلى. هدّئها — مكسب مضاعف.","فكرة مزعجة؟ اكْرُها كورقة وألقِها في طوقٍ مشتعل. تحترق — ويعود السكون.","انظر إلى القلب — دفء واتساع وطمأنينة.","مع الزفير، أرْخِ الكتفين والوجه — يلين الذهن."],
+    ja:["空腹のほうが静けさに入りやすい。","ストレスの強い日は思考が大きくなる。静めればダブルで良い。","邪魔な思考？紙くずのように丸めて炎の輪へ投げ入れよう。燃え、静けさに戻る。","ハートを見る—温かさ、広がり、静けさ。","吐く息で肩と顔をゆるめる—心がやわらぐ。"]
+  };
+  const MET_TXT = {
+    ru:["Войди в пустую комнату внутри. Снежинки оседают — наступает тишина.","Дыхание словно волны моря: наблюдай, не вмешиваясь.","Смотри на мысль как на облако: оно проплывёт мимо само."],
+    en:["Enter the empty room within. Snow settles — silence comes.","Breath like ocean waves: watch without interfering.","See a thought as a cloud: it drifts away on its own."],
+    es:["Entra en la habitación vacía interior. La nieve se posa — llega el silencio.","La respiración como olas del mar: observa sin intervenir.","Mira el pensamiento como una nube: pasará por sí solo."],
+    pt:["Entre no quarto vazio interior. A neve assenta — o silêncio chega.","A respiração como ondas do mar: observe sem intervir.","Veja o pensamento como uma nuvem: ele passa sozinho."],
+    fr:["Entre dans la pièce vide intérieure. La neige retombe — le silence arrive.","La respiration comme des vagues : observe sans intervenir.","Vois la pensée comme un nuage : elle passe d’elle-même."],
+    de:["Betritt den leeren Raum in dir. Schnee legt sich — Stille kehrt ein.","Atmen wie Meereswellen: beobachten, ohne einzugreifen.","Sieh Gedanken wie Wolken: sie ziehen von selbst vorbei."],
+    zh:["走进内在的空房间。雪花落定——静默到来。","呼吸如海浪：只是观照，不去干预。","把念头当作云：它会自己飘走。"],
+    ar:["ادخل الغرفة الخالية في الداخل. تهبط الثلوج — ويحل السكون.","النَّفَس كأمواج البحر: راقب بلا تدخل.","انظر إلى الفكرة كسحابة: تمر من تلقاء نفسها."],
+    ja:["内なる空の部屋へ入る。雪が静かに積もり—静けさが訪れる。","呼吸は海の波のよう：ただ見守る。","思考を雲として見る：やがて自ずと流れていく。"]
+  };
+  function setMet(){ const arr=MET_TXT[currentLang]||MET_TXT.en; $('metaphor').textContent = arr[Math.floor(Math.random()*arr.length)]; }
+  function ADVTXTpick(){const arr=ADV_TXT[currentLang]||ADV_TXT.en; return arr[Math.floor(Math.random()*arr.length)];}
+  function dropAdvice(){ $('advice').textContent = t('tip_prefix')+" "+ADVTXTpick(); }
+
+  let tStart=0, tGoal=600, tTick=null, canPlace=false, maxSelectableSec=0;
+
+  function startTimer(){
+    tGoal = +$('duration').value; tStart=Date.now();
+    $('start').disabled=true; $('stop').disabled=false;
+    $('timerTarget').textContent="/ "+new Date(tGoal*1000).toISOString().substr(14,5)+" "+t('goal');
+    $('timerBox').classList.remove('hidden');
+    $('post').style.display='none';
+    document.title=(currentLang==='ru'?'Идёт медитация… '
+      : currentLang==='es'?'Meditación en curso… '
+      : currentLang==='pt'?'Meditação em andamento… '
+      : currentLang==='fr'?'Méditation en cours… '
+      : currentLang==='de'?'Meditation läuft… '
+      : currentLang==='zh'?'冥想进行中… '
+      : currentLang==='ar'?'جاري التأمل… '
+      : currentLang==='ja'?'瞑想中… '
+      : 'Meditation in progress… ')+ '('+(tGoal/60)+' min)';
+    startSound();
+    tick(); tTick=setInterval(tick,200);
+  }
+  function stopTimer(){
+    if(tTick){clearInterval(tTick); tTick=null;}
+    $('start').disabled=false; $('stop').disabled=true; document.title='Vibro — Тишина и волны';
+    canPlace=true; $('mapHint').style.display='block';
+    $('post').style.display='block';
+    dropAdvice();
+    maxSelectableSec=Math.floor((Date.now()-tStart)/1000);
+    $('silenceHint').textContent=t('maximum')+" "+new Date(maxSelectableSec*1000).toISOString().substr(14,5)+" "+t('by_timer');
+    $('silenceInput').value="00:00";
+    stopSound();
+  }
+  function tick(){
+    const s=Math.floor((Date.now()-tStart)/1000);
+    $('timerClock').textContent=new Date(s*1000).toISOString().substr(14,5);
+    $('timerBox').classList.toggle('overtime', s>tGoal);
+  }
+
+  function loadSessions(){try{return JSON.parse(localStorage.getItem('vibro_sessions')||'[]')}catch{return[]}}
+  function saveSession(rec){const L=loadSessions();L.push(rec);localStorage.setItem('vibro_sessions',JSON.stringify(L));renderStats();}
+  function renderStats(){const L=loadSessions(),now=new Date(),ymd=d=>d.toISOString().slice(0,10);const today=ymd(now),w0=new Date(now);w0.setDate(now.getDate()-6);const ws=ymd(w0);let tSum=0,w=0;for(const r of L){const d=ymd(new Date(r.ts)),s=r.silence||0;if(d===today)tSum+=s;if(d>=ws)w+=s;}$('todaySilence').textContent=fmt(tSum);$('weekSilence').textContent=fmt(w);}
+
+  $('openMenu').onclick=()=>{$('drawer').classList.add('show')};
+  $('closeMenu').onclick=()=>{$('drawer').classList.remove('show')};
+
+  /* маска MM:SS */
+  const si=$('silenceInput');
+  const nextPos=p=>(p<=0?1:p===1?3:p===3?4:4), prevPos=p=>(p>=4?3:p===3?1:0);
+  const ensure=v=>/^\d{2}:\d{2}$/.test(v)?v:"00:00";
+  function mask(el){
+    el.value = ensure(el.value||"00:00");
+    el.addEventListener('focus',()=>setTimeout(()=>el.setSelectionRange(0,0),0));
+    el.addEventListener('keydown',e=>{
+      let val=ensure(el.value||"00:00"), pos=el.selectionStart??0; if(pos===2)pos=3;
+      if(/^\d$/.test(e.key)){const a=val.split('');a[pos]=e.key;el.value=a.join('');el.setSelectionRange(nextPos(pos),nextPos(pos));e.preventDefault();return;}
+      if(e.key==='Backspace'){pos=prevPos(pos);const a=val.split('');a[pos]='0';el.value=a.join('');el.setSelectionRange(pos,pos);e.preventDefault();return;}
+      if(e.key==='Delete'){const a=val.split('');a[pos]='0';el.value=a.join('');el.setSelectionRange(pos,pos);e.preventDefault();return;}
+      if(e.key==='ArrowLeft'){el.setSelectionRange(prevPos(pos),prevPos(pos));e.preventDefault();return;}
+      if(e.key==='ArrowRight'){el.setSelectionRange(nextPos(pos),nextPos(pos));e.preventDefault();return;}
+      if(!['Tab','Home','End'].includes(e.key)) e.preventDefault();
+    });
+    el.addEventListener('paste',e=>{
+      const t=(e.clipboardData||window.clipboardData).getData('text')||"", d=t.replace(/\D/g,'').slice(0,4);
+      const mm=(d.slice(0,2)||"00").padStart(2,'0'), ss=(d.slice(2,4)||"00").padStart(2,'0');
+      el.value=mm+":"+ss; el.setSelectionRange(4,4); e.preventDefault();
+    });
+  } mask(si);
+
+  function showToast(msg){
+    const tEl=$('toast'), txt=$('toastText'); txt.textContent=msg || t('toast_after');
+    tEl.classList.add('show');
+    const hide=()=>tEl.classList.remove('show');
+    $('toastClose').onclick=hide;
+    clearTimeout(showToast._tm); showToast._tm=setTimeout(hide,4000);
+  }
+
+  $('saveScore').onclick=()=>{
+    const v=ensure(si.value||"00:00"); const [m,s]=v.split(':').map(Number);
+    if(s>59){alert(t('err_sec'));return;}
+    const sec=m*60+s; if(sec<=0){alert(t('err_gt0'));return;}
+    if(sec>maxSelectableSec){alert(t('err_timer'));return;}
+    saveSession({ts:new Date().toISOString(),silence:sec});
+    $('post').style.display='none';
+    $('timerBox').classList.add('hidden');
+    si.value='00:00';
+    showToast();
+    savedSound();
+    canPlace=true; $('mapHint').style.display='block';
+    dropAdvice();
+  };
+
+  /* ===== КАРТА (canvas) ===== */
+  const CAN=$('vmap'), CTX=CAN.getContext('2d');
+  const BG_LIGHT=new Image(); BG_LIGHT.src='world_light.jpg';
+  const BG_DARK =new Image(); BG_DARK.src='world_dark.jpg';
+  let bg = BG_LIGHT;
+
+  const DAY=86400000;
+
+  let dpr=1, cssW=0, cssH=0;
+  let view={x:0,y:0,s:1,minS:1,maxS:24};
+  let dragging=false,last={x:0,y:0};
+
+  const AMBIENT_COUNT=100;
+  let ambient=[];
+  const REG=[
+    [0.05,0.20,0.32,0.42],
+    [0.20,0.47,0.38,0.86],
+    [0.40,0.22,0.56,0.40],
+    [0.45,0.42,0.62,0.82],
+    [0.56,0.18,0.88,0.55],
+    [0.78,0.60,0.92,0.86],
+    [0.62,0.44,0.76,0.64],
+  ];
+  function buildAmbient(){
+    ambient.length=0;
+    for(let i=0;i<AMBIENT_COUNT;i++){
+      const r=REG[Math.floor(Math.random()*REG.length)];
+      const nx=r[0]+Math.random()*(r[2]-r[0]);
+      const ny=r[1]+Math.random()*(r[3]-r[1]);
+      const cIdx = Math.floor(Math.random()*CHAKRAS_BASE.length);
+      ambient.push({
+        x: nx*bg.width,
+        y: ny*bg.height,
+        chakra: cIdx,
+        color: CHAKRAS_BASE[cIdx].color,
+        phase: Math.random()*Math.PI*2,
+        speed: 0.5+Math.random()*0.8,
+      });
+    }
+  }
+
+  function deviceResize(){
+    dpr = window.devicePixelRatio || 1;
+    cssW = $('mapWrap').clientWidth;
+    cssH = Math.round(cssW/2);
+    CAN.style.width = cssW+'px';
+    CAN.style.height = cssH+'px';
+    CAN.width  = Math.round(cssW * dpr);
+    CAN.height = Math.round(cssH * dpr);
+    CTX.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function resize(){
+    deviceResize();
+    const sX=cssW/bg.width, sY=cssH/bg.height;
+    view.minS=Math.max(sX,sY);
+    view.maxS=view.minS*24;
+    setDefaultView();
+    draw();
+  }
+  function setDefaultView(){
+    view.s=view.minS;
+    view.x=(cssW - bg.width*view.s)/2;
+    view.y=(cssH - bg.height*view.s)/2;
+    keepInBounds(); syncKnob();
+  }
+  const clampNum = (v,min,max)=>Math.max(min,Math.min(max,v));
+  function keepInBounds(){
+    const vw=bg.width*view.s, vh=bg.height*view.s;
+    const minX=cssW-vw, minY=cssH-vh;
+    view.x=clampNum(view.x, Math.min(0,minX), 0);
+    view.y=clampNum(view.y, Math.min(0,minY), 0);
+  }
+  function toMap(px,py){return{x:(px-view.x)/view.s,y:(py-view.y)/view.s}}
+  function toScreen(x,y){return{x:x*view.s+view.x,y:y*view.s+view.y}}
+
+  /* === окно времени (фильтр) === */
+  const MAP_STYLE_KEY='vibro_map_style';
+  const WIN_KEY='vibro_map_window';
+  let windowMs = parseInt(localStorage.getItem(WIN_KEY) || String(DAY), 10);
+  const WINDOWS = [3600000, 21600000, 43200000, 86400000];
+
+  function setWindowMs(ms){
+    windowMs = ms;
+    localStorage.setItem(WIN_KEY, String(ms));
+    document.querySelectorAll('.chips .chip').forEach(btn=>{
+      btn.classList.toggle('active', Number(btn.dataset.ms)===windowMs);
+    });
+  }
+
+  const countEls = {}; let lastCounts = {};
+  function initCountEls(){
+    document.querySelectorAll('.chipCount').forEach(el=>{
+      const ms=Number(el.dataset.ms);
+      countEls[ms] = el; lastCounts[ms] = -1;
+    });
+  }
+  function formatCompact(n){
+    const units=['','K','M','B','T']; let i=0, v=n;
+    while(v>=1000 && i<units.length-1){ v/=1000; i++; }
+    const val = (v>=10 || i===0) ? Math.round(v) : Math.round(v*10)/10;
+    return String(val)+units[i];
+  }
+
+  function draw(){
+    const nowTs = Date.now();
+    CTX.clearRect(0,0,cssW,cssH);
+    CTX.imageSmoothingQuality='high';
+    CTX.drawImage(bg,view.x,view.y,bg.width*view.s,bg.height*view.s);
+
+    CTX.save(); CTX.globalAlpha=.28; CTX.strokeStyle='#223041';
+    const step=1000*view.s; if(step>12){
+      CTX.beginPath();
+      for(let x=view.x%step; x<cssW; x+=step){CTX.moveTo(x,0);CTX.lineTo(x,cssH);}
+      for(let y=view.y%step; y<cssH; y+=step){CTX.moveTo(0,y);CTX.lineTo(cssW,y);}
+      CTX.stroke();
+    }
+    CTX.restore();
+
+    const tNow=performance.now()/1000;
+
+    for(const a of ambient){
+      const p=toScreen(a.x,a.y);
+      const vis=CH_VIS[a.chakra];
+      const spark = (Math.sin(tNow*a.speed + a.phase)*0.5+0.5);
+      const sparkR = 0.8 + spark*0.8;
+      CTX.fillStyle = "#ffffff" + Math.floor(120*spark).toString(16).padStart(2,'0');
+      CTX.beginPath(); CTX.arc(p.x,p.y,sparkR,0,Math.PI*2); CTX.fill();
+      for(let j=0;j<vis.rings;j++){
+        const phase=((tNow*a.speed + a.phase + j*0.6)%1);
+        const rr = vis.ring + phase*(vis.ring*0.9) + j*3;
+        const alpha = Math.floor((1-phase)*110).toString(16).padStart(2,'0');
+        CTX.strokeStyle = CHAKRAS_BASE[a.chakra].color + alpha;
+        CTX.lineWidth = 1;
+        CTX.beginPath(); CTX.arc(p.x,p.y,rr,0,Math.PI*2); CTX.stroke();
+      }
+      CTX.fillStyle = CHAKRAS_BASE[a.chakra].color + "cc";
+      CTX.beginPath(); CTX.arc(p.x,p.y,vis.core,0,Math.PI*2); CTX.fill();
+    }
+
+    const counts = {3600000:0,21600000:0,43200000:0,86400000:0};
+    for(const m of markers){
+      const age = nowTs - m.ts;
+      if (age <= WINDOWS[0]) { counts[WINDOWS[0]]++; counts[WINDOWS[1]]++; counts[WINDOWS[2]]++; counts[WINDOWS[3]]++; }
+      else if (age <= WINDOWS[1]) { counts[WINDOWS[1]]++; counts[WINDOWS[2]]++; counts[WINDOWS[3]]++; }
+      else if (age <= WINDOWS[2]) { counts[WINDOWS[2]]++; counts[WINDOWS[3]]++; }
+      else if (age <= WINDOWS[3]) { counts[WINDOWS[3]]++; }
+
+      if (age > windowMs) continue;
+      const p=toScreen(m.x,m.y);
+      const mine = m.uid===UID;
+      const boost = (mine && isSub) ? 1.35 : 1;
+      const coreR= (1.0+(Math.sin(tNow*2+m.ts/500)+1)*0.4) * boost;
+      CTX.fillStyle=m.color+"ee";
+      CTX.beginPath(); CTX.arc(p.x,p.y,coreR,0,Math.PI*2); CTX.fill();
+      for(let k=0;k<2;k++){
+        const phase=(tNow*0.7+k*0.45)%1, rr=4+phase*14;
+        const a=Math.min(110, Math.round((1-phase)*110*boost));
+        const alpha=a.toString(16).padStart(2,'0');
+        CTX.strokeStyle=m.color+alpha; CTX.lineWidth=1.1*boost;
+        CTX.beginPath(); CTX.arc(p.x,p.y,rr,0,Math.PI*2); CTX.stroke();
+      }
+    }
+
+    WINDOWS.forEach(ms=>{
+      if (counts[ms] !== lastCounts[ms]){
+        lastCounts[ms] = counts[ms];
+        if (countEls[ms]) countEls[ms].textContent = formatCompact(counts[ms]);
+      }
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  function loadMarkers(){try{const arr=JSON.parse(localStorage.getItem('vibro_markers')||'[]')||[];return arr.filter(m=>Date.now()-m.ts<DAY);}catch{return[]}}
+  let markers=loadMarkers();
+  function saveMarkers(){localStorage.setItem('vibro_markers',JSON.stringify(markers));}
+
+  const CANVAS=$('vmap');
+  CANVAS.addEventListener('mousedown',e=>{dragging=true;last={x:e.clientX,y:e.clientY};CANVAS.classList.add('dragging'); startLongPress(e.clientX,e.clientY);});
+  window.addEventListener('mouseup',()=>{dragging=false;CANVAS.classList.remove('dragging'); cancelLongPress();});
+  window.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    view.x+=e.clientX-last.x; view.y+=e.clientY-last.y;
+    last={x:e.clientX,y:e.clientY}; keepInBounds();
+    moveLongPress(e.clientX,e.clientY);
+  });
+
+  let pinch=null;
+  CANVAS.addEventListener('touchstart',e=>{
+    if(e.touches.length===1){
+      dragging=true; last={x:e.touches[0].clientX,y:e.touches[0].clientY};
+      startLongPress(e.touches[0].clientX,e.touches[0].clientY);
+    } else if(e.touches.length===2){pinch={d:dist(e.touches[0],e.touches[1]),s:view.s}; cancelLongPress();}
+  },{passive:false});
+  CANVAS.addEventListener('touchmove',e=>{
+    if(pinch&&e.touches.length===2){
+      const d=dist(e.touches[0],e.touches[1]);const ns=clampNum(pinch.s*d/pinch.d,view.minS,view.maxS);
+      zoomAt(ns, cssW/2, cssH/2); e.preventDefault(); cancelLongPress();
+    } else if(dragging&&e.touches.length===1){
+      view.x+=e.touches[0].clientX-last.x; view.y+=e.touches[0].clientY-last.y;
+      last={x:e.touches[0].clientX,y:e.touches[0].clientY}; keepInBounds();
+      moveLongPress(e.touches[0].clientX,e.touches[0].clientY);
+    }
+  },{passive:false});
+  window.addEventListener('touchend',()=>{pinch=null;dragging=false;CANVAS.classList.remove('dragging'); cancelLongPress();});
+  function dist(a,b){const dx=a.clientX-b.clientX,dy=a.clientY-b.clientY;return Math.hypot(dx,dy)}
+
+  CANVAS.addEventListener('wheel',e=>{
+    const factor=Math.exp(-e.deltaY*0.0015);
+    const ns=clampNum(view.s*factor,view.minS,view.maxS);
+    zoomAt(ns,e.offsetX,e.offsetY);
+    cancelLongPress();
+  },{passive:true});
+
+  let lastInfoToast=0;
+  CANVAS.addEventListener('pointerdown',()=>{
+    if(!canPlace){
+      const now=Date.now();
+      if(now-lastInfoToast>1200){
+        showToast(t('toast_blocked'));
+        lastInfoToast=now;
+      }
+    }
+  });
+
+  function zoomAt(newScale,ax,ay){
+    const before=toMap(ax,ay);
+    view.s=newScale;
+    view.x=ax-before.x*view.s;
+    view.y=ay-before.y*view.s;
+    keepInBounds(); syncKnob();
+  }
+  const knob=$('zoomKnob'), bar=$('zoomBar'), zoomWrap=$('zoomWrap');
+  function setZoomByKnob(py){
+    const r=bar.getBoundingClientRect(); const tR=clamp((py-r.top)/r.height,0,1);
+    knob.style.top=(tR*100)+'%';
+    const ns=view.minS+(view.maxS-view.minS)*(1-tR);
+    zoomAt(ns, cssW/2, cssH/2);
+  }
+  knob.addEventListener('pointerdown',ev=>{
+    ev.preventDefault();
+    const move=e=>setZoomByKnob(e.clientY), up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);};
+    window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);
+  });
+  function syncKnob(){
+    const tR=1-(view.s-view.minS)/(view.maxS-view.minS);
+    knob.style.top=(clamp(tR,0,1)*100)+'%';
+    zoomWrap.style.setProperty('--t', clamp(tR,0,1));
+  }
+
+  function applyBg(img){
+    bg = img;
+    if (bg.complete) { buildAmbient(); resize(); }
+    else { bg.onload = ()=>{ buildAmbient(); resize(); }; }
+  }
+  function setMapStyle(style){
+    localStorage.setItem(MAP_STYLE_KEY, style);
+    $('mapLight').classList.toggle('active', style!=='dark');
+    $('mapDark').classList.toggle('active',  style==='dark');
+    applyBg(style==='dark' ? BG_DARK : BG_LIGHT);
+  }
+  $('mapLight').onclick = ()=> setMapStyle('light');
+  $('mapDark').onclick  = ()=> setMapStyle('dark');
+
+  /* LONG PRESS */
+  let lpTimer=null, lpStart=null; const LP_MS=500, LP_MOVE=8;
+  function startLongPress(cx,cy){
+    if(!canPlace){ lpStart=null; return; }
+    const rect=CANVAS.getBoundingClientRect();
+    const px=cx-rect.left, py=cy-rect.top;
+    lpStart={x:cx, y:cy, px, py, moved:false};
+    cancelLongPress();
+    lpTimer=setTimeout(()=>{ if(lpStart && !lpStart.moved) { placeMarkerAtClient(lpStart.x, lpStart.y); } }, LP_MS);
+  }
+  function moveLongPress(cx,cy){
+    if(!lpStart) return;
+    if(Math.abs(cx-lpStart.x)>LP_MOVE || Math.abs(cy-lpStart.y)>LP_MOVE){
+      lpStart.moved=true;
+      cancelLongPress();
+    }
+  }
+  function cancelLongPress(){ if(lpTimer){ clearTimeout(lpTimer); lpTimer=null; } }
+  function placeMarkerAtClient(clientX, clientY){
+    if(!canPlace) return;
+    const rect = CANVAS.getBoundingClientRect();
+    const px = (clientX - rect.left), py = (clientY - rect.top);
+    const m = toMap(px,py);
+    const ch = chakraForDur(+$('duration').value);
+    const now = Date.now();
+    markers = markers.filter(it => !(it.uid===UID && (now-it.ts)<DAY));
+    markers.push({x:m.x,y:m.y,color:ch.color,ts:now,uid:UID});
+    saveMarkers();
+    canPlace=false; $('mapHint').style.display='none';
+    cancelLongPress();
+  }
+
+  function setMetAndStats(){syncChakraUI();setMet();renderStats();}
+
+  $('brandBtn').onclick=()=>{$('about').classList.add('show')};
+  $('aboutClose').onclick=()=>{$('about').classList.remove('show')};
+  $('about').querySelector('.scrim').onclick=()=>{$('about').classList.remove('show')};
+  window.addEventListener('keydown',e=>{ if(e.key==='Escape') $('about').classList.remove('show'); });
+
+  $('langRu').onclick=()=>setLang('ru');
+  $('langEn').onclick=()=>setLang('en');
+  $('langEs').onclick=()=>setLang('es');
+  $('langPt').onclick=()=>setLang('pt');
+  $('langFr').onclick=()=>setLang('fr');
+  $('langDe').onclick=()=>setLang('de');
+  $('langZh').onclick=()=>setLang('zh');
+  $('langAr').onclick=()=>setLang('ar');
+  $('langJa').onclick=()=>setLang('ja');
+
+  window.addEventListener('DOMContentLoaded', ()=>{
+    // синхронизация UI языков
+    syncLangUI();
+    applyI18n();
+
+    setMetAndStats();
+
+    const initStyle = localStorage.getItem(MAP_STYLE_KEY) || 'light';
+    setMapStyle(initStyle);
+
+    setWindowMs(parseInt(localStorage.getItem('vibro_map_window') || String(DAY),10));
+    document.querySelectorAll('.chips .chip').forEach(btn=>{
+      btn.addEventListener('click', ()=> setWindowMs(Number(btn.dataset.ms)));
+    });
+
+    initCountEls();
+
+    $('duration').addEventListener('change',()=>{$('timerTarget').textContent="/ "+new Date(+$('duration').value*1000).toISOString().substr(14,5)+" "+t('goal');syncChakraUI();});
+    $('start').onclick=startTimer; $('stop').onclick=stopTimer;
+
+    if (BG_LIGHT.complete && initStyle==='light') { buildAmbient(); resize(); }
+    if (BG_DARK.complete  && initStyle==='dark')  { buildAmbient(); resize(); }
+
+    window.addEventListener('resize',resize);
+    $('mapSection').addEventListener('toggle',()=>{ if($('mapSection').open){ setTimeout(resize,50); } });
+
+    $('toastClose').onclick=()=>$('toast').classList.remove('show');
+  });
+  </script>
+</body>
+</html>
