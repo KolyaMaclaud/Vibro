@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Supabase Tiles Demo</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; }
+    #map { width: 100%; height: 100%; }
+    #gen {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      padding: 8px 14px;
+      background: white;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button id="gen">Сгенерировать тайлы</button>
+  <div id="map"></div>
+
+  <script>
+    // Ограничивающий прямоугольник (без Антарктиды)
+    const MAX_BOUNDS = L.latLngBounds(
+      L.latLng(-58, -180), // нижняя граница — обрезаем Антарктиду
+      L.latLng(75, 180)    // верхняя граница — немного ниже Арктики
+    );
+
+    // Создаём карту с ограничением
+    const map = L.map('map', {
+      maxBounds: MAX_BOUNDS,
+      maxBoundsViscosity: 1.0
+    }).fitBounds(MAX_BOUNDS);
+
+    // Базовый слой (подложка)
+    const baseLayer = L.tileLayer(
+      'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+      {
+        attribution: '&copy; OpenStreetMap, &copy; CARTO',
+        subdomains: 'abcd',
+        noWrap: true,
+        bounds: MAX_BOUNDS
+      }
+    ).addTo(map);
+
+    // --- НАШ СЛОЙ ТАЙЛОВ С SUPABASE ---
+    // URL функции, которая отдаёт PNG-тайлы по z/x/y
+    const GET_TILES_URL = 'https://ttcwdasslhvkdulqwzte.supabase.co/functions/v1/get-tiles';
+
+    // Leaflet не поддерживает нативно ?z=&x=&y= в tileLayer URL,
+    // поэтому используем createTile, чтобы собирать адрес вручную.
+    const vibroTiles = L.gridLayer({
+      noWrap: true,
+      bounds: MAX_BOUNDS,
+      tileSize: 128,          // важно: в функции у нас 128×128
+      updateWhenIdle: true,
+      maxZoom: 19
+    });
+
+    vibroTiles.createTile = function(coords, done) {
+      const img = document.createElement('img');
+      // cache-buster чтобы видеть свежесгенерённые тайлы
+      const bust = (vibroTiles._bust || '');
+      img.src = `${GET_TILES_URL}?z=${coords.z}&x=${coords.x}&y=${coords.y}${bust}`;
+      img.alt = '';
+      img.referrerPolicy = 'no-referrer';
+      img.onload = () => done(null, img);
+      img.onerror = () => done(new Error('tile error'), img);
+      return img;
+    };
+
+    vibroTiles.addTo(map);
+
+    // Кнопка генерации (дергаем функцию и обновляем слой)
+    document.getElementById('gen').onclick = async () => {
+      try {
+        const url = 'https://ttcwdasslhvkdulqwzte.supabase.co/functions/v1/generate-tiles-hourly';
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ source: 'map-demo' })
+        });
+        const txt = await resp.text();
+        alert('Генерация запущена/выполнена:\n' + txt);
+
+        // Пробиваем кэш тайлов: меняем cache-buster и перерисовываем
+        vibroTiles._bust = `&ts=${Date.now()}`;
+        vibroTiles.redraw();
+      } catch (e) {
+        alert('Ошибка генерации: ' + e.message);
+      }
+    };
+  </script>
+</body>
+</html>

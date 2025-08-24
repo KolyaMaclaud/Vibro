@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8" />
+<title>Vibro Tiles Demo</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<body style="font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;background:#0b0b0b;color:#e6e6e6;margin:0">
+  <div style="padding:16px;max-width:720px;margin:auto">
+    <h2 style="margin:0 0 12px">Vibro Tiles — демо</h2>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+      <button id="bGen" style="padding:8px 12px;border-radius:10px;border:1px solid #2a2a2a;background:#1a1a1a;color:#fff;cursor:pointer">
+        Сгенерировать (0/0/0)
+      </button>
+      <button id="bGet" style="padding:8px 12px;border-radius:10px;border:1px solid #2a2a2a;background:#1a1a1a;color:#fff;cursor:pointer">
+        Показать тайл z0/x0/y0
+      </button>
+    </div>
+
+    <pre id="log" style="background:#111;color:#0f0;padding:10px;min-height:80px;white-space:pre-wrap;border:1px solid #222;border-radius:10px"></pre>
+    <img id="im" style="margin-top:10px;max-width:256px;display:none;border:1px solid #333;border-radius:6px" alt="tile"/>
+  </div>
+
+<script>
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0Y3dkYXNzbGh2a2R1bHF3enRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDU0MzQsImV4cCI6MjA3MTEyMTQzNH0.olNpZvqAU5XQbP8Owy1fCl0oCZaVIPXUH89PP8kwNPk"; // для прод лучше спрятать за прокладку
+const REF = "ttcwdasslhvkdulqwzte";
+const BASE = `https://${REF}.supabase.co`;
+const GEN  = `${BASE}/functions/v1/generate-tiles-hourly`;
+const GET  = `${BASE}/functions/v1/get-tiles?z=0&x=0&y=0`;
+
+const logEl = document.getElementById('log');
+const imgEl = document.getElementById('im');
+const log = (m) => { logEl.textContent = `[${new Date().toLocaleTimeString()}] ${m}\n` + logEl.textContent; };
+
+document.getElementById('bGen').onclick = async () => {
+  try{
+    const r = await fetch(GEN, {
+      method:'POST',
+      headers:{ 'Authorization':`Bearer ${KEY}`, 'apikey':KEY, 'Content-Type':'application/json' },
+      body: '{}',
+      cache:'no-store',
+    });
+    log('POST '+r.status+' '+await r.text());
+  }catch(e){ log('POST error: '+e); }
+};
+
+document.getElementById('bGet').onclick = async () => {
+  try{
+    const r = await fetch(GET, {
+      headers:{ 'Authorization':`Bearer ${KEY}`, 'apikey':KEY },
+      cache:'no-store'
+    });
+    if(!r.ok){ log('GET '+r.status+' '+await r.text()); return; }
+    const b = await r.blob();
+    imgEl.src = URL.createObjectURL(b);
+    imgEl.style.display = 'block';
+    log('GET 200 image '+b.type+' '+b.size+' bytes');
+  }catch(e){ log('GET error: '+e); }
+};
+</script>
+</body>
+</html>

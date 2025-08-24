@@ -1,0 +1,176 @@
+/* Tiles Map Styles */
+.tiles-map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  background: #1e1e1e;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tiles-map {
+  width: 100%;
+  height: 100%;
+}
+
+/* Стили для кнопок карт - вертикальное размещение */
+.mapThumbs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  position: relative;
+  z-index: 1000;
+}
+
+.mapBtn {
+  width: 36px;
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mapBtn:hover {
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+/* Стили для активной кнопки */
+.mapBtn.is-active {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px rgba(119, 224, 160, 0.3) !important;
+}
+
+/* Hide original map elements when tiles are active */
+.tiles-mode #vmap,
+.tiles-mode #yinCanvas,
+.tiles-mode #zoomWrap {
+  display: none !important;
+}
+
+/* НЕ скрываем mapControls - иконки должны быть видны всегда */
+.mapControls {
+  position: absolute !important;
+  left: 20px !important;
+  bottom: 10px !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  z-index: 1000 !important;
+}
+
+/* Point placement info bar */
+.pointPlacementInfo {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #7fe39a, #5cdb8b);
+  color: #1a1a1a;
+  padding: 16px 24px;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(127, 227, 154, 0.4);
+  z-index: 1001;
+  font-size: 14px;
+  font-weight: 500;
+  animation: slideInUp 0.3s ease-out;
+  max-width: 90vw;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.pointPlacementContent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
+}
+
+.pointPlacementIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.pointPlacementText {
+  white-space: normal;
+  line-height: 1.4;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Meditation points */
+.meditation-point {
+  animation: pointGlow 2s ease-in-out infinite;
+}
+
+.meditation-point.optimistic {
+  animation: optimisticGlow 1s ease-in-out infinite;
+}
+
+.meditation-point.permanent {
+  animation: permanentGlow 3s ease-in-out infinite;
+}
+
+@keyframes pointGlow {
+  0%, 100% { 
+    box-shadow: 0 0 5px rgba(127, 227, 154, 0.5);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 15px rgba(127, 227, 154, 0.8);
+    transform: scale(1.1);
+  }
+}
+
+@keyframes optimisticGlow {
+  0%, 100% { 
+    box-shadow: 0 0 8px rgba(255, 193, 7, 0.6);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.9);
+    transform: scale(1.2);
+  }
+}
+
+@keyframes permanentGlow {
+  0%, 100% { 
+    box-shadow: 0 0 6px rgba(127, 227, 154, 0.6);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 18px rgba(127, 227, 154, 0.9);
+    transform: scale(1.15);
+  }
+}

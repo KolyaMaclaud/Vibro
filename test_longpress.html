@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Long Press Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #testArea {
+            width: 400px;
+            height: 300px;
+            border: 2px solid #ccc;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            position: relative;
+        }
+        #testArea.active {
+            background: #e0ffe0;
+            border-color: #22c55e;
+        }
+        .point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #FFC107;
+            border: 2px solid #FFC107;
+            transform: translate(-50%, -50%);
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #16a34a;
+        }
+    </style>
+</head>
+<body>
+    <h1>Long Press Test</h1>
+    
+    <button onclick="activatePlacement()">Activate Point Placement</button>
+    <button onclick="clearLog()">Clear Log</button>
+    
+    <div id="testArea">
+        <div>Click and hold for 0.5 seconds to place a point</div>
+    </div>
+    
+    <div class="log" id="log"></div>
+    
+    <script>
+        let canPlace = false;
+        let longPressTimer = null;
+        let longPressStart = null;
+        const LONG_PRESS_DURATION = 500; // 0.5 секунды
+        const MOVE_THRESHOLD = 8; // пиксели
+        
+        function log(message) {
+            const logEl = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logEl.innerHTML += `[${timestamp}] ${message}\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        function activatePlacement() {
+            canPlace = true;
+            document.getElementById('testArea').classList.add('active');
+            log('[POINT] Placement activated');
+        }
+        
+        function createPoint(x, y) {
+            const point = document.createElement('div');
+            point.className = 'point';
+            point.style.left = x + 'px';
+            point.style.top = y + 'px';
+            document.getElementById('testArea').appendChild(point);
+            
+            // Удаляем точку через 5 секунд
+            setTimeout(() => {
+                point.remove();
+                log('[POINT] Point removed');
+            }, 5000);
+            
+            return point;
+        }
+        
+        const testArea = document.getElementById('testArea');
+        
+        // Mouse events
+        testArea.addEventListener('mousedown', (e) => {
+            log(`[POINT] mousedown detected: canPlace=${canPlace}, x=${e.clientX}, y=${e.clientY}`);
+            if (!canPlace) {
+                log('[POINT] mousedown blocked - canPlace is false');
+                return;
+            }
+            
+            const rect = testArea.getBoundingClientRect();
+            longPressStart = { 
+                x: e.clientX - rect.left, 
+                y: e.clientY - rect.top 
+            };
+            log('[POINT] long press timer started');
+            longPressTimer = setTimeout(() => {
+                log('[POINT] long press triggered');
+                const point = createPoint(longPressStart.x, longPressStart.y);
+                log(`[POINT] Point created at (${longPressStart.x}, ${longPressStart.y})`);
+            }, LONG_PRESS_DURATION);
+        });
+        
+        testArea.addEventListener('mousemove', (e) => {
+            if (!longPressStart || !longPressTimer) return;
+            
+            const rect = testArea.getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
+            
+            const moveDistance = Math.sqrt(
+                Math.pow(currentX - longPressStart.x, 2) + 
+                Math.pow(currentY - longPressStart.y, 2)
+            );
+            
+            if (moveDistance > MOVE_THRESHOLD) {
+                log(`[POINT] long press cancelled - moved too far: ${moveDistance.toFixed(1)}px`);
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+                longPressStart = null;
+            }
+        });
+        
+        testArea.addEventListener('mouseup', () => {
+            if (longPressTimer) {
+                log('[POINT] long press cancelled - mouse up');
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            longPressStart = null;
+        });
+        
+        // Touch events
+        testArea.addEventListener('touchstart', (e) => {
+            log(`[POINT] touchstart detected: canPlace=${canPlace}, touches=${e.touches.length}`);
+            if (!canPlace || e.touches.length !== 1) {
+                log(`[POINT] touchstart blocked - canPlace: ${canPlace}, touches: ${e.touches.length}`);
+                return;
+            }
+            
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const rect = testArea.getBoundingClientRect();
+            longPressStart = { 
+                x: touch.clientX - rect.left, 
+                y: touch.clientY - rect.top 
+            };
+            log(`[POINT] long press timer started (touch): x=${longPressStart.x}, y=${longPressStart.y}`);
+            longPressTimer = setTimeout(() => {
+                log('[POINT] long press triggered (touch)');
+                const point = createPoint(longPressStart.x, longPressStart.y);
+                log(`[POINT] Point created at (${longPressStart.x}, ${longPressStart.y})`);
+            }, LONG_PRESS_DURATION);
+        }, { passive: false });
+        
+        testArea.addEventListener('touchmove', (e) => {
+            if (!longPressStart || !longPressTimer || e.touches.length !== 1) return;
+            
+            const touch = e.touches[0];
+            const rect = testArea.getBoundingClientRect();
+            const currentX = touch.clientX - rect.left;
+            const currentY = touch.clientY - rect.top;
+            
+            const moveDistance = Math.sqrt(
+                Math.pow(currentX - longPressStart.x, 2) + 
+                Math.pow(currentY - longPressStart.y, 2)
+            );
+            
+            if (moveDistance > MOVE_THRESHOLD) {
+                log(`[POINT] long press cancelled - moved too far (touch): ${moveDistance.toFixed(1)}px`);
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+                longPressStart = null;
+            }
+        }, { passive: false });
+        
+        testArea.addEventListener('touchend', () => {
+            if (longPressTimer) {
+                log('[POINT] long press cancelled - touch end');
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            longPressStart = null;
+        });
+        
+        log('[POINT] Test page loaded');
+        log('[POINT] Click "Activate Point Placement" to enable long press');
+    </script>
+</body>
+</html>

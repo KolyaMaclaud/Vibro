@@ -1,0 +1,34 @@
+# ОС
+.DS_Store
+Thumbs.db
+
+# IDE/редакторы
+.vscode/
+.idea/
+*.code-workspace
+
+# Сборки/кеши (если появятся)
+dist/
+build/
+out/
+.cache/
+tmp/
+temp/
+
+# Node
+node_modules/
+
+# Supabase локальные артефакты/секреты
+.supabase/
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+.env
+.env.local
+.env.*.local
+
+# Логи
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
